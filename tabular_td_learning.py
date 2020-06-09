@@ -6,11 +6,12 @@ import pickle
 import torch
 
 
-# class TD():
-#     def __init__(self):
-#         return
-#     def update(self, old_value, new_value):
-#
+class TabTD:
+    def __init__(self, grid):
+        self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
+
+    def update(self, old_value, new_value):
+        pass
 
 
 # MAIN FUNCTION
@@ -27,7 +28,7 @@ np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
 fix_pos = [5, 10]
 # Maybe load previous model
 file_dir = "td/"
-file_base = "v"
+file_base = "v2"
 file_post = "_a04_g099r20_mean_f"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
@@ -38,7 +39,9 @@ if not os.path.isdir(file_dir):
 if os.path.isfile(file_name) == True:
     value, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
 else:
-    value = np.full((grid_size[0], grid_size[1], grid_size[0], grid_size[1], 4, 5), 0.2)
+    model = TabTD(grid_size)
+    # value = np.full((grid_size[0], grid_size[1], grid_size[0], grid_size[1], 4, 5), 0.2)
+
     alpha = 0.4
     gamma = .99
     r = 15
@@ -57,7 +60,7 @@ delay = 0
 
 record_dir = "/video/"
 
-print(value.shape)
+print(model.q.shape)
 directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
 d_name = ['left', 'right', 'up', 'down']
 a_name = ['left', 'right', 'up', 'down', 'no']
@@ -78,7 +81,7 @@ for i in range(it + 1, it + 200001):
         # features = calculate_features(snake, number_grid, grid_size).to(device)
         old_dir = [i for i in range(4) if (directions[i]==snake.head.dir).all()][0]
         old_state = (snake.head.grid[0], snake.head.grid[1], number_grid[0], number_grid[1], old_dir)
-        probs_td = np.exp(value[old_state])/sum(np.exp(value[old_state]))
+        probs_td = np.exp(model.q[old_state])/sum(np.exp(model.q[old_state]))
 
         # Take action depending on prob of each option.
         action = np.random.choice(range(5), p=probs_td)  # policy
@@ -101,8 +104,8 @@ for i in range(it + 1, it + 200001):
                 # print("new state mean: ", np.mean(value[new_state]))
 
                 # TD.update_value(value[old_state][action], value[new_state])
-                value[old_state][action] += alpha * (reward + gamma * np.mean(value[new_state])
-                                                     - value[old_state][action])
+                model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
+                                                     - model.q[old_state][action])
                 # print("new value: ", value[old_state])
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
             if snake.state == "dead":
@@ -111,17 +114,17 @@ for i in range(it + 1, it + 200001):
                 # print("old probs: ", probs_td, "on ", old_state)
                 # print("action taken: %s (%i)" % (a_name[action], action))
                 # update this value
-                value[old_state][action] += alpha * reward
+                model.q[old_state][action] += alpha * reward
                 # print("new probs: ", np.exp(value[old_state])/sum(np.exp(value[old_state])), "on ", old_state)
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
                 break
             if number > 50:
                 reward += 0
                 # update this value
-                value[old_state][action] += alpha * (reward + gamma*np.mean(value[new_state]) - value[old_state][action])
+                model.q[old_state][action] += alpha * (reward + gamma*np.mean(model.q[new_state]) - model.q[old_state][action])
                 break
-            value[old_state][action] += alpha * (reward + gamma * np.mean(value[new_state])
-                                                 - value[old_state][action])
+            model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
+                                                 - model.q[old_state][action])
         if number_moves == 1000:
             reward += 0
             # update this value
@@ -147,9 +150,9 @@ for i in range(it + 1, it + 200001):
         plot_performance(performance, file_dir + file_base + file_post)
         # plot_value(value, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
-        plot_probs(value, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png',
+        plot_probs(model.q, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png',
                    alpha=alpha, gamma=gamma, r=r, it=i)
-        pickle.dump([value, alpha, gamma, r, performance, i], open(file_dir + file_base + file_post + file_ext, 'wb'))
+        pickle.dump([model.q, alpha, gamma, r, performance, i], open(file_dir + file_base + file_post + file_ext, 'wb'))
 
 
 plot_msg("Press Esc. to quit", screen, font)
