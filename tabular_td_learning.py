@@ -111,8 +111,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 # print("new state mean: ", np.mean(value[new_state]))
 
                 model.update_q(reward, old_state, action, new_state)
-                # model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
-                #                                      - model.q[old_state][action])
+
                 # print("new value: ", value[old_state])
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
             if snake.state == "dead":
@@ -125,21 +124,8 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 # print("new probs: ", np.exp(value[old_state])/sum(np.exp(value[old_state])), "on ", old_state)
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
                 break
-            if number > 50:
-                reward += 0
-                # update this value
-                model.update_q(reward, old_state, action, new_state)
-                break
             model.update_q(reward, old_state, action, new_state)
-        if number_moves == 1000:
-            reward += 0
-            # update this value
-            # print("\nAt ", snake.head.grid[0], snake.head.grid[1], "going ", d_name[old_dir])
-            # print("old probs: ", probs_td, "on ", old_state)
-            # print("action taken: %s (%i)" % (a_name[action], action))
-            # value[old_state][action] += alpha * (reward + gamma * np.mean(value[new_state])
-            #                                      - value[old_state][action])
-            # print("new probs: ", np.exp(value[old_state]) / sum(np.exp(value[old_state])), "on ", old_state)
+        if number_moves == 1000 or number > 50:
             break
 
         update_game_screen(screen, snake, number, number_grid * sq_size , number_txt, font, render=render)
