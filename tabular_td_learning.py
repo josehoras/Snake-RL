@@ -10,8 +10,11 @@ class TabTD:
     def __init__(self, grid):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
 
-    def update(self, old_value, new_value):
-        pass
+    def update_q(self, s, a, s_p):
+        try:
+            self.q[s][a] += alpha * (reward + gamma * np.mean(model.q[s_p]) - model.q[s][a])
+        except:
+            self.q[s][a] += alpha * reward
 
 
 # MAIN FUNCTION
@@ -40,7 +43,6 @@ if os.path.isfile(file_name) == True:
     value, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
 else:
     model = TabTD(grid_size)
-    # value = np.full((grid_size[0], grid_size[1], grid_size[0], grid_size[1], 4, 5), 0.2)
 
     alpha = 0.4
     gamma = .99
@@ -103,9 +105,9 @@ for i in range(it + 1, it + 200001):
                 # print("action taken: %s (%i)" % (a_name[action], action))
                 # print("new state mean: ", np.mean(value[new_state]))
 
-                # TD.update_value(value[old_state][action], value[new_state])
-                model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
-                                                     - model.q[old_state][action])
+                model.update_q(old_state, action, new_state)
+                # model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
+                #                                      - model.q[old_state][action])
                 # print("new value: ", value[old_state])
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
             if snake.state == "dead":
@@ -114,17 +116,16 @@ for i in range(it + 1, it + 200001):
                 # print("old probs: ", probs_td, "on ", old_state)
                 # print("action taken: %s (%i)" % (a_name[action], action))
                 # update this value
-                model.q[old_state][action] += alpha * reward
+                model.update_q(old_state, action, new_state)
                 # print("new probs: ", np.exp(value[old_state])/sum(np.exp(value[old_state])), "on ", old_state)
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
                 break
             if number > 50:
                 reward += 0
                 # update this value
-                model.q[old_state][action] += alpha * (reward + gamma*np.mean(model.q[new_state]) - model.q[old_state][action])
+                model.update_q(old_state, action, new_state)
                 break
-            model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
-                                                 - model.q[old_state][action])
+            model.update_q(old_state, action, new_state)
         if number_moves == 1000:
             reward += 0
             # update this value
