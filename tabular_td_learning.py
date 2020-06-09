@@ -59,7 +59,8 @@ else:
 pygame.init()
 screen = pygame.display.set_mode(screen_size)
 pygame.display.set_caption('Snake')
-if render==False: pygame.display.iconify()
+if not render:
+    pygame.display.iconify()
 # Define fonts for screen messages
 font_size = int(sq_size[1]*1.5)
 font = pygame.font.SysFont("ubuntumono",  font_size)
