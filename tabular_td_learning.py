@@ -14,8 +14,11 @@ class TabTD:
         self.r = r
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
-    # def load(self, file_name):
-    #     self.q, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
+    def load(self, file_name):
+        self.q, self.alpha, self.gamma, self.r, self.performance = pickle.load(open(file_name, 'rb'), encoding='latin1')
+
+    def save(self, file_name):
+        pickle.dump([self.q, self.alpha, self.gamma, self.r, self.performance], open(file_name, 'wb'))
 
     def update_q(self, r, s, a, s_p):
         try:
@@ -47,11 +50,10 @@ if not os.path.isdir(file_dir):
     os.mkdir(file_dir)
 
 if os.path.isfile(file_name) == True:
-    value, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
+    model = TabTD(grid_size)
+    model.load(file_name)
 else:
     model = TabTD(grid_size, alpha = 0.4, gamma = .99, r = 15)
-    print(len(model.performance['moves']))
-    it = 0
 
 # Start pygame screen
 pygame.init()
@@ -71,7 +73,7 @@ d_name = ['left', 'right', 'up', 'down']
 a_name = ['left', 'right', 'up', 'down', 'no']
 
 # Main loop
-for i in range(it + 1, it + 200001):
+for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
     # Create snake and first number
     snake = Snake("square", screen_size, grid_size, speed=5)  # style "square" or "round"
     number, number_grid, number_txt = generate_number(0, snake.grid, grid_size,
@@ -156,7 +158,7 @@ for i in range(it + 1, it + 200001):
         #            alpha=alpha, gamma=gamma, r=r, it=i)
         plot_probs(model.q, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png',
                    alpha=model.alpha, gamma=model.gamma, r=model.r, it=i)
-        pickle.dump([model.q, model.alpha, model.gamma, model.r, model.performance, i], open(file_dir + file_base + file_post + file_ext, 'wb'))
+        model.save(file_name)
 
 
 plot_msg("Press Esc. to quit", screen, font)
