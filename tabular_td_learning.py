@@ -49,11 +49,11 @@ file_name = file_dir + file_base + file_post + file_ext
 if not os.path.isdir(file_dir):
     os.mkdir(file_dir)
 
-if os.path.isfile(file_name) == True:
+if os.path.isfile(file_name):
     model = TabTD(grid_size)
     model.load(file_name)
 else:
-    model = TabTD(grid_size, alpha = 0.4, gamma = .99, r = 15)
+    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=15)
 
 # Start pygame screen
 pygame.init()
