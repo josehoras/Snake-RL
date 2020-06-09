@@ -109,10 +109,10 @@ def plot_value(value, x, y, file_name='td/value.png', alpha='', gamma='', r='', 
     plt.close("all")
 
 
-def plot_probs(value, x, y, file_name='td/value.png', alpha='', gamma='', r='', it=''):
+def plot_probs(model, x, y, file_name='td/value.png'):
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
-    value_plane = value[:, :, x, y]
+    value_plane = model.q[:, :, x, y]
     probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
 
     # d = random.randint(0, 3)
@@ -148,11 +148,11 @@ def plot_probs(value, x, y, file_name='td/value.png', alpha='', gamma='', r='', 
             # if i==2:
             #     cbar = fig.colorbar(im, ax=ax, shrink=0.62, format='%.1f') #,use_gridspec=True
 
-    if alpha != '' and rows < 3:
-        fig.text(0.7, 0.35, 'alpha = {}'.format(alpha), fontsize=16)
-        fig.text(0.7, 0.3, 'gamma = {}'.format(gamma), fontsize=16)
-        fig.text(0.7, 0.25, 'r = {}'.format(r), fontsize=16)
-        fig.text(0.7, 0.2, 'it = {}'.format(it), fontsize=16)
+    if model.alpha != '' and rows < 3:
+        fig.text(0.7, 0.35, 'alpha = {}'.format(model.alpha), fontsize=16)
+        fig.text(0.7, 0.3, 'gamma = {}'.format(model.gamma), fontsize=16)
+        fig.text(0.7, 0.25, 'r = {}'.format(model.r), fontsize=16)
+        fig.text(0.7, 0.2, 'it = {}'.format(len(model.performance['moves'])), fontsize=16)
     # fig.colorbar(cm.ScalarMappable(cmap='viridis'))
     # fig.tight_layout(pad=2.5, h_pad=0.25, w_pad=0.25)
     fig.tight_layout()

@@ -136,8 +136,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
-        plot_probs(model.q, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png',
-                   alpha=model.alpha, gamma=model.gamma, r=model.r, it=i)
+        plot_probs(model, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png')
         model.save(file_name)
 
 plot_msg("Press Esc. to quit", screen, font)
