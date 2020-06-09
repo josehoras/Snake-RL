@@ -99,15 +99,16 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     while not(check_quit_event()):
         level_moves += 1
         number_moves += 1
-        # features = calculate_features(snake, number_grid, grid_size).to(device)
+
         old_state = (snake.head.grid[0], snake.head.grid[1], number_grid[0], number_grid[1], dir2i(snake.head.dir))
-        probs_td = np.exp(model.q[old_state])/sum(np.exp(model.q[old_state]))
-        # Take action depending on prob of each option.
-        action = np.random.choice(range(5), p=probs_td)  # policy
+        # Take action depending on policy
+        probs_td = np.exp(model.q[old_state]) / sum(np.exp(model.q[old_state]))
+        action = np.random.choice(range(5), p=probs_td)
         action_taken = snake.update_move(action, number_grid, mode='AI')
         # snake.update_move(pygame.key.get_pressed(), number_grid)  # Manual play
         new_state = (snake.head.grid[0] + snake.head.dir[0], snake.head.grid[1] + snake.head.dir[1],
                      number_grid[0], number_grid[1], dir2i(snake.head.dir))
+        # Assign reward and update q function
         if action_taken:
             reward = 0
             if snake.state == "dead":
