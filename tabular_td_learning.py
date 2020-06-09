@@ -7,14 +7,21 @@ import torch
 
 
 class TabTD:
-    def __init__(self, grid):
+    def __init__(self, grid, alpha = 0.4, gamma = .99, r = 15):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
+        self.alpha = alpha
+        self.gamma = gamma
+        self.r = r
+        self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
-    def update_q(self, s, a, s_p):
+    # def load(self, file_name):
+    #     self.q, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
+
+    def update_q(self, r, s, a, s_p):
         try:
-            self.q[s][a] += alpha * (reward + gamma * np.mean(model.q[s_p]) - model.q[s][a])
+            self.q[s][a] += self.alpha * (r + self.gamma * np.mean(model.q[s_p]) - model.q[s][a])
         except:
-            self.q[s][a] += alpha * reward
+            self.q[s][a] += self.alpha * r
 
 
 # MAIN FUNCTION
@@ -42,12 +49,8 @@ if not os.path.isdir(file_dir):
 if os.path.isfile(file_name) == True:
     value, alpha, gamma, r, performance, it = pickle.load(open(file_name, 'rb'), encoding='latin1')
 else:
-    model = TabTD(grid_size)
-
-    alpha = 0.4
-    gamma = .99
-    r = 15
-    performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
+    model = TabTD(grid_size, alpha = 0.4, gamma = .99, r = 15)
+    print(len(model.performance['moves']))
     it = 0
 
 # Start pygame screen
@@ -96,7 +99,7 @@ for i in range(it + 1, it + 200001):
             reward = torch.tensor([0], dtype=torch.float)
             if snake.state == "just_ate":
                 number_moves = 0
-                reward += r
+                reward += model.r
                 number, number_grid, number_txt = generate_number(number, snake.grid, grid_size,
                                                                   font, white, set=fix_pos)
                 # print("At ", snake.head.grid[0], snake.head.grid[1], "going ", d_name[old_dir])
@@ -105,27 +108,27 @@ for i in range(it + 1, it + 200001):
                 # print("action taken: %s (%i)" % (a_name[action], action))
                 # print("new state mean: ", np.mean(value[new_state]))
 
-                model.update_q(old_state, action, new_state)
+                model.update_q(reward, old_state, action, new_state)
                 # model.q[old_state][action] += alpha * (reward + gamma * np.mean(model.q[new_state])
                 #                                      - model.q[old_state][action])
                 # print("new value: ", value[old_state])
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
             if snake.state == "dead":
-                reward += -r
+                reward += -model.r
                 # print("At ", snake.head.grid[0], snake.head.grid[1], "going ", d_name[old_dir])
                 # print("old probs: ", probs_td, "on ", old_state)
                 # print("action taken: %s (%i)" % (a_name[action], action))
                 # update this value
-                model.update_q(old_state, action, new_state)
+                model.update_q(reward, old_state, action, new_state)
                 # print("new probs: ", np.exp(value[old_state])/sum(np.exp(value[old_state])), "on ", old_state)
                 # print("new dir: ", d_name[new_dir], "on ", new_state)
                 break
             if number > 50:
                 reward += 0
                 # update this value
-                model.update_q(old_state, action, new_state)
+                model.update_q(reward, old_state, action, new_state)
                 break
-            model.update_q(old_state, action, new_state)
+            model.update_q(reward, old_state, action, new_state)
         if number_moves == 1000:
             reward += 0
             # update this value
@@ -142,18 +145,18 @@ for i in range(it + 1, it + 200001):
 
         pygame.time.delay(delay)
 
-    performance = update_performance(performance, number, level_moves)
+    model.performance = update_performance(model.performance, number, level_moves)
     print(i, " - score: %i (%.1f), moves: %i (%.0f)" %
-          (performance['score'][-1], performance['smooth_score'][-1],
-           performance['moves'][-1], performance['smooth_moves'][-1]))
+          (model.performance['score'][-1], model.performance['smooth_score'][-1],
+           model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
     print()
     if i % 50 == 0:
-        plot_performance(performance, file_dir + file_base + file_post)
+        plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(value, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
         plot_probs(model.q, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png',
-                   alpha=alpha, gamma=gamma, r=r, it=i)
-        pickle.dump([model.q, alpha, gamma, r, performance, i], open(file_dir + file_base + file_post + file_ext, 'wb'))
+                   alpha=model.alpha, gamma=model.gamma, r=model.r, it=i)
+        pickle.dump([model.q, model.alpha, model.gamma, model.r, model.performance, i], open(file_dir + file_base + file_post + file_ext, 'wb'))
 
 
 plot_msg("Press Esc. to quit", screen, font)
