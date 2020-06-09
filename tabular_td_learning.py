@@ -27,6 +27,22 @@ class TabTD:
             self.q[s][a] += self.alpha * r
 
 
+def debug_msg_1(old_state, probs_td, action, new_state):
+    d_name = ['left', 'right', 'up', 'down']
+    a_name = ['left', 'right', 'up', 'down', 'no']
+    print("At ", old_state[0], old_state[1], "going ", d_name[old_state[-1]])
+    print("value: ", model.q[old_state], "on ", old_state)
+    print("probs: ", probs_td)
+    print("action taken: %s (%i)" % (a_name[action], action))
+    # print("new state mean: ", np.mean(model.q[new_state]))
+
+
+def debug_msg_2(old_state, new_dir):
+    d_name = ['left', 'right', 'up', 'down']
+    print("new value: ", model.q[old_state])
+    print("new dir: ", d_name[new_dir], "on ", new_state)
+
+
 # MAIN FUNCTION
 black = 0, 0, 0
 white = 255, 255, 255
@@ -70,8 +86,6 @@ record_dir = "/video/"
 
 print(model.q.shape)
 directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-d_name = ['left', 'right', 'up', 'down']
-a_name = ['left', 'right', 'up', 'down', 'no']
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -105,25 +119,12 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 reward += model.r
                 number, number_grid, number_txt = generate_number(number, snake.grid, grid_size,
                                                                   font, white, set=fix_pos)
-                # print("At ", snake.head.grid[0], snake.head.grid[1], "going ", d_name[old_dir])
-                # print("value: ", value[old_state], "on ", old_state)
-                # print("probs: ", probs_td)
-                # print("action taken: %s (%i)" % (a_name[action], action))
-                # print("new state mean: ", np.mean(value[new_state]))
-
                 model.update_q(reward, old_state, action, new_state)
-
-                # print("new value: ", value[old_state])
-                # print("new dir: ", d_name[new_dir], "on ", new_state)
             if snake.state == "dead":
                 reward += -model.r
-                # print("At ", snake.head.grid[0], snake.head.grid[1], "going ", d_name[old_dir])
-                # print("old probs: ", probs_td, "on ", old_state)
-                # print("action taken: %s (%i)" % (a_name[action], action))
-                # update this value
+                # debug_msg_1(old_state, probs_td, action, new_state)
                 model.update_q(reward, old_state, action, new_state)
-                # print("new probs: ", np.exp(value[old_state])/sum(np.exp(value[old_state])), "on ", old_state)
-                # print("new dir: ", d_name[new_dir], "on ", new_state)
+                # debug_msg_2(old_state, new_dir)
                 break
             model.update_q(reward, old_state, action, new_state)
         if number_moves == 1000 or number > 50:
