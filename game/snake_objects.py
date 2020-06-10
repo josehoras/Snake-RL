@@ -136,23 +136,23 @@ class Snake(pygame.sprite.Group):
 
 
     def update_dir(self, pressed_keys, mode='manual'):
-        if mode=='manual':
-            if pressed_keys[K_LEFT] and self.head.dir[0]!=1:
+        if mode == 'manual':
+            if pressed_keys[K_LEFT] and self.head.dir[0] != 1:
                 self.next_dir = np.array([-1, 0])
-            if pressed_keys[K_RIGHT] and self.head.dir[0]!=-1:
+            if pressed_keys[K_RIGHT] and self.head.dir[0] != -1:
                 self.next_dir = np.array([1, 0])
-            if pressed_keys[K_UP] and self.head.dir[1]!=1:
+            if pressed_keys[K_UP] and self.head.dir[1] != 1:
                 self.next_dir = np.array([0, -1])
-            if pressed_keys[K_DOWN] and self.head.dir[1]!=-1:
+            if pressed_keys[K_DOWN] and self.head.dir[1] != -1:
                 self.next_dir = np.array([0, 1])
-        if mode=='AI':
-            if pressed_keys==0 and self.head.dir[0]!=1:
+        if mode == 'AI':
+            if pressed_keys == 0 and self.head.dir[0] != 1:
                 self.next_dir = np.array([-1, 0])
-            if pressed_keys==1 and self.head.dir[0]!=-1:
+            if pressed_keys == 1 and self.head.dir[0] != -1:
                 self.next_dir = np.array([1, 0])
-            if pressed_keys==2 and self.head.dir[1]!=1:
+            if pressed_keys == 2 and self.head.dir[1] != 1:
                 self.next_dir = np.array([0, -1])
-            if pressed_keys==3 and self.head.dir[1]!=-1:
+            if pressed_keys == 3 and self.head.dir[1] != -1:
                 self.next_dir = np.array([0, 1])
 
     def plot(self, screen):
