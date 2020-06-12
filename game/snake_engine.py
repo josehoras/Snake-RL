@@ -54,10 +54,12 @@ class GameSession:
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         print(self.snake.state)
-        # if snake.state == "just_ate":
-        #     number, number_grid, number_txt = generate_number(number, snake.grid, grid_size, font, white)
-        # if snake.state == "dead":
-        #     break
+        reward = 0
+        if self.snake.state == "just_ate":
+            self.gen_number(self.number['n'], white)
+            reward = 1
+        if self.snake.state == "dead":
+            reward = -1
         return action_taken
 
     def exit(self):
