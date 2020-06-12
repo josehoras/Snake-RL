@@ -49,20 +49,14 @@ def debug_msg_2(old_state, new_state):
 
 
 # MAIN FUNCTION
-black = 0, 0, 0
-white = 255, 255, 255
-blue = 0, 0, 255
+np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
-env = GameSession(screen_size, grid_size, delay=0, fix_number = [5, 10], render=False)
-sq_size = screen_size // grid_size
-render = False
-np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
-# Define model
-
 fix_pos = [5, 10]
-# Maybe load previous model
-file_dir = "td/"
+env = GameSession(screen_size, grid_size, delay=0, fix_number = fix_pos, render=False)
+
+# Model name
+file_dir = "results/"
 file_base = "v3"
 file_post = "_a04_g099r20_mean_f"
 file_ext = ".td"
@@ -70,7 +64,7 @@ file_name = file_dir + file_base + file_post + file_ext
 
 if not os.path.isdir(file_dir):
     os.mkdir(file_dir)
-
+# Maybe load previous model
 if os.path.isfile(file_name):
     model = TabTD(grid_size)
     model.load(file_name)
@@ -86,7 +80,6 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     while not(check_quit_event()):
         level_moves += 1
         number_moves += 1
-
         old_state = (env.snake.head.grid[0], env.snake.head.grid[1], env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
         # print(old_state==env.state)
         # Take action depending on policy
