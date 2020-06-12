@@ -1,6 +1,7 @@
 from game.snake_objects import Snake
 from game.snake_functions import *
 from performance_mon import *
+from game.snake_engine import GameSession
 import os.path
 import pickle
 
@@ -53,6 +54,7 @@ white = 255, 255, 255
 blue = 0, 0, 255
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
+env = GameSession(screen_size, grid_size, delay=0, fix_number = [5, 10], render=False)
 sq_size = screen_size // grid_size
 render = False
 np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
@@ -61,7 +63,7 @@ np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
 fix_pos = [5, 10]
 # Maybe load previous model
 file_dir = "td/"
-file_base = "v2"
+file_base = "v3"
 file_post = "_a04_g099r20_mean_f"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
@@ -75,59 +77,33 @@ if os.path.isfile(file_name):
 else:
     model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=15)
 
-# Start pygame screen
-pygame.init()
-screen = pygame.display.set_mode(screen_size)
-pygame.display.set_caption('Snake')
-if not render:
-    pygame.display.iconify()
-# Define fonts for screen messages
-font_size = int(sq_size[1]*1.5)
-font = pygame.font.SysFont("ubuntumono",  font_size)
-delay = 0
-
-
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
-    # Create snake and first number
-    snake = Snake("square", screen_size, grid_size, speed=5)  # style "square" or "round"
-    number, number_grid, number_txt = generate_number(0, snake.grid, grid_size, font, white, set=fix_pos)
-    update_game_screen(screen, snake, number, number_grid * sq_size , number_txt, font, render=render)
-
+    env.start_game()
     level_moves = 0
     number_moves = 0
+    score = 1
     while not(check_quit_event()):
         level_moves += 1
         number_moves += 1
 
-        old_state = (snake.head.grid[0], snake.head.grid[1], number_grid[0], number_grid[1], dir2i(snake.head.dir))
+        old_state = (env.snake.head.grid[0], env.snake.head.grid[1], env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
+        # print(old_state==env.state)
         # Take action depending on policy
         probs_td = np.exp(model.q[old_state]) / sum(np.exp(model.q[old_state]))
         action = np.random.choice(range(5), p=probs_td)
-        action_taken = snake.update_move(action, number_grid, mode='AI')
-        # snake.update_move(pygame.key.get_pressed(), number_grid)  # Manual play
-        new_state = (snake.head.grid[0] + snake.head.dir[0], snake.head.grid[1] + snake.head.dir[1],
-                     number_grid[0], number_grid[1], dir2i(snake.head.dir))
+        action_taken, reward, alive, state = env.step(action, mode='AI')
+        new_state = (env.snake.head.grid[0] + env.snake.head.dir[0], env.snake.head.grid[1] + env.snake.head.dir[1],
+                     env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
         # Assign reward and update q function
         if action_taken:
-            reward = 0
-            if snake.state == "dead":
-                reward += -model.r
-                # debug_msg_1(old_state, probs_td, action, new_state)
-                model.update_q(reward, old_state, action, new_state)
-                # debug_msg_2(old_state, new_state)
-                break
-            if snake.state == "just_ate":
+            if env.number['n'] > score:
+                score = env.number['n']
                 number_moves = 0
-                reward += model.r
-                number, number_grid, number_txt = generate_number(number, snake.grid, grid_size, font, white, set=fix_pos)
-            model.update_q(reward, old_state, action, new_state)
-        if number_moves == 1000 or number > 50:
+            model.update_q(reward*20, old_state, action, new_state)
+        if number_moves == 1000 or env.number['n'] > 50 or not alive:
             break
-        update_game_screen(screen, snake, number, number_grid * sq_size , number_txt, font, render=render)
-        delay = check_delay(delay, pygame.key.get_pressed())
-        pygame.time.delay(delay)
-    model.performance = update_performance(model.performance, number, level_moves)
+    model.performance = update_performance(model.performance, env.number['n'], level_moves)
     print(i, " - score: %i (%.1f), moves: %i (%.0f)" %
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
            model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
@@ -139,8 +115,4 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         plot_probs(model, fix_pos[0], fix_pos[1], file_name=file_dir + 'p_map' + file_post + '.png')
         model.save(file_name)
 
-plot_msg("Press Esc. to quit", screen, font)
-pygame.display.update()
-while not(check_quit_event()):
-    pass
-pygame.display.quit()
+env.exit()

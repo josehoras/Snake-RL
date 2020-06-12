@@ -54,8 +54,7 @@ class GameSession:
         self.head = self.snake.head
         self.gen_number(0, white)
         self.update_screen()
-        self.state = (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
-                     self.number['grid'][0], self.number['grid'][1], self.dir2i())
+        self.state = (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
 
     def check_game_event(self):
         reward = 0
@@ -76,8 +75,7 @@ class GameSession:
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         reward = self.check_game_event()
-        self.state = (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
-             self.number['grid'][0], self.number['grid'][1], self.dir2i())
+        self.state = (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
         return action_taken, reward, self.alive, self.state
 
     def exit(self):
