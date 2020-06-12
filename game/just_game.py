@@ -21,7 +21,7 @@ env.start_game()
 
 while not(check_quit_event()):
     # action = pygame.key.get_pressed()
-    env.step(pygame.key.get_pressed())
+    action_taken, reward, state = env.step(pygame.key.get_pressed())
 
     # print('key: ', np.argmax(pygame.key.get_pressed()), np.sum(pygame.key.get_pressed()))
     # print('action: ', np.argmax(action), np.sum(action))

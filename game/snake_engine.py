@@ -11,7 +11,7 @@ class GameSession:
         self.render = render
         self.number = {'n': 0, 'grid': np.array([0,0]), 'txt': 0}
         self.fix_number = fix_number
-        self.state = "live"
+        self.state = "alive"
         # Start pygame screen
         pygame.init()
         self.screen = pygame.display.set_mode(screen_size)
@@ -45,6 +45,7 @@ class GameSession:
 
     def start_game(self):
         # Create snake and first number
+        self.state = "alive"
         self.snake = Snake("square", self.screen_size, self.grid_size, speed=5)  # style "square" or "round"
         self.gen_number(0, white)
         self.update_screen()
@@ -60,12 +61,14 @@ class GameSession:
         return reward
 
     def step(self, action, mode='manual'):
+        if self.state == "dead":
+            self.start_game()
+            return False, 0, self.state
         action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         reward = self.check_game_event()
-        print(self.state, reward)
         return action_taken, reward, self.state
 
     def exit(self):
