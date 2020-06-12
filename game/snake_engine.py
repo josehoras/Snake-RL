@@ -11,6 +11,7 @@ class GameSession:
         self.render = render
         self.number = {'n': 0, 'grid': np.array([0,0]), 'txt': 0}
         self.fix_number = fix_number
+        self.state = "live"
         # Start pygame screen
         pygame.init()
         self.screen = pygame.display.set_mode(screen_size)
@@ -48,19 +49,24 @@ class GameSession:
         self.gen_number(0, white)
         self.update_screen()
 
-    def step(self, action, mode='manual'):
-        action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
-        self.update_screen()
-        self.delay = check_delay(self.delay, pygame.key.get_pressed())
-        pygame.time.delay(self.delay)
-        print(self.snake.state)
+    def check_game_event(self):
         reward = 0
         if self.snake.state == "just_ate":
             self.gen_number(self.number['n'], white)
             reward = 1
         if self.snake.state == "dead":
             reward = -1
-        return action_taken
+            self.state = "dead"
+        return reward
+
+    def step(self, action, mode='manual'):
+        action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
+        self.update_screen()
+        self.delay = check_delay(self.delay, pygame.key.get_pressed())
+        pygame.time.delay(self.delay)
+        reward = self.check_game_event()
+        print(self.state, reward)
+        return action_taken, reward, self.state
 
     def exit(self):
         plot_msg("Press Esc. to quit", self.screen, self.font)
