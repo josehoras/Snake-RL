@@ -11,7 +11,7 @@ class GameSession:
         self.render = render
         self.number = {'n': 0, 'grid': np.array([0,0]), 'txt': 0}
         self.fix_number = fix_number
-        self.state = "alive"
+        self.alive = True
         # Start pygame screen
         pygame.init()
         self.screen = pygame.display.set_mode(screen_size)
@@ -34,6 +34,10 @@ class GameSession:
                 c = [g for g in self.snake.grid if (self.number['grid'] == g).all()]
         self.number['txt'] = self.font.render(str(self.number['n']), True, color, grey)
 
+    def dir2i(self):
+        directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+        return [i for i in range(4) if (directions[i] == self.snake.head.dir).all()][0]
+
     def update_screen(self):
         if self.render:
             self.screen.fill(black)
@@ -45,10 +49,13 @@ class GameSession:
 
     def start_game(self):
         # Create snake and first number
-        self.state = "alive"
+        self.alive = True
         self.snake = Snake("square", self.screen_size, self.grid_size, speed=5)  # style "square" or "round"
+        self.head = self.snake.head
         self.gen_number(0, white)
         self.update_screen()
+        self.state = (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
+                     self.number['grid'][0], self.number['grid'][1], self.dir2i())
 
     def check_game_event(self):
         reward = 0
@@ -57,19 +64,21 @@ class GameSession:
             reward = 1
         if self.snake.state == "dead":
             reward = -1
-            self.state = "dead"
+            self.alive = False
         return reward
 
     def step(self, action, mode='manual'):
-        if self.state == "dead":
+        if not self.alive:
             self.start_game()
-            return False, 0, self.state
+            return False, 0, self.alive, self.state
         action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         reward = self.check_game_event()
-        return action_taken, reward, self.state
+        self.state = (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
+             self.number['grid'][0], self.number['grid'][1], self.dir2i())
+        return action_taken, reward, self.alive, self.state
 
     def exit(self):
         plot_msg("Press Esc. to quit", self.screen, self.font)

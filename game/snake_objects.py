@@ -102,7 +102,7 @@ class Snake(pygame.sprite.Group):
 
 
     def old_update_move(self, pressed_keys, number_pos, mode='manual'):
-        self.state = "alive"
+        # self.state = "alive"
         # Move the head and, if the length is ok, the tail
         self.head.update(self.speed)
         if len(self) >= self.length:

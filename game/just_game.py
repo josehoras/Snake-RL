@@ -11,6 +11,9 @@ def check_quit_event():
             return True
     return False
 
+def dir2i(dir):
+    directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    return [i for i in range(4) if (directions[i] == dir).all()][0]
 
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
@@ -21,8 +24,12 @@ env.start_game()
 
 while not(check_quit_event()):
     # action = pygame.key.get_pressed()
-    action_taken, reward, state = env.step(pygame.key.get_pressed())
-
+    action_taken, reward, alive, state = env.step(pygame.key.get_pressed())
+    new_state = (env.snake.head.grid[0] + env.snake.head.dir[0], env.snake.head.grid[1] + env.snake.head.dir[1],
+                 env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
+    print(alive)
+    print(new_state)
+    print(state)
     # print('key: ', np.argmax(pygame.key.get_pressed()), np.sum(pygame.key.get_pressed()))
     # print('action: ', np.argmax(action), np.sum(action))
 
