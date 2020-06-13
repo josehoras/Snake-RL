@@ -54,6 +54,7 @@ class GameSession:
         self.head = self.snake.head
         self.gen_number(0, white)
         self.update_screen()
+        return False, 0, self.alive
 
     def check_game_event(self):
         reward = 0
@@ -75,7 +76,6 @@ class GameSession:
     def step(self, action, mode='manual'):
         if not self.alive:
             self.start_game()
-            return False, 0, self.alive
         action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
