@@ -1,6 +1,5 @@
-from game.snake_functions import check_quit_event
-from performance_mon import *
 from game.snake_engine import GameSession
+from performance_mon import *
 import os.path
 import pickle
 
@@ -66,11 +65,11 @@ else:
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
-    env.start_game()
+    _, _, alive = env.start_game()
     level_moves = 0
     number_moves = 0
     score = 1
-    while not(check_quit_event()):
+    while alive:
         level_moves += 1
         number_moves += 1
 
@@ -88,7 +87,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 number_moves = 0
             next_state = env.get_next_state()
             model.update_q(reward*20, old_state, action, next_state)
-        if number_moves == 1000 or env.number['n'] > 50 or not alive:
+        if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping
     model.performance = update_performance(model.performance, env.number['n'], level_moves)
