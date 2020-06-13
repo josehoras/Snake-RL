@@ -26,11 +26,6 @@ class TabTD:
             self.q[s][a] += self.alpha * r
 
 
-def dir2i(dir):
-    directions = [[-1, 0], [1, 0], [0, -1], [0, 1]]
-    return [i for i in range(4) if (directions[i] == dir).all()][0]
-
-
 def debug_msg_1(old_state, probs_td, action, new_state):
     d_name = ['left', 'right', 'up', 'down']
     a_name = ['left', 'right', 'up', 'down', 'no']
@@ -78,9 +73,9 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     while not(check_quit_event()):
         level_moves += 1
         number_moves += 1
-        old_state = env.get_state()
 
         # Take action depending on policy
+        old_state = env.get_state()
         probs_td = np.exp(model.q[old_state]) / sum(np.exp(model.q[old_state]))
         action = np.random.choice(range(5), p=probs_td)
 
