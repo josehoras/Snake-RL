@@ -54,7 +54,6 @@ class GameSession:
         self.head = self.snake.head
         self.gen_number(0, white)
         self.update_screen()
-        self.state = (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
 
     def check_game_event(self):
         reward = 0
@@ -66,17 +65,23 @@ class GameSession:
             self.alive = False
         return reward
 
+    def get_state(self):
+        return (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
+
+    def get_next_state(self):
+        return (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
+                     self.number['grid'][0], self.number['grid'][1], self.dir2i())
+
     def step(self, action, mode='manual'):
         if not self.alive:
             self.start_game()
-            return False, 0, self.alive, self.state
+            return False, 0, self.alive
         action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         reward = self.check_game_event()
-        self.state = (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
-        return action_taken, reward, self.alive, self.state
+        return action_taken, reward, self.alive
 
     def exit(self):
         plot_msg("Press Esc. to quit", self.screen, self.font)

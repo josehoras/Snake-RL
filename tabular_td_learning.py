@@ -80,22 +80,24 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     while not(check_quit_event()):
         level_moves += 1
         number_moves += 1
-        old_state = (env.snake.head.grid[0], env.snake.head.grid[1], env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
-        # print(old_state==env.state)
+        old_state = env.get_state()
+
         # Take action depending on policy
         probs_td = np.exp(model.q[old_state]) / sum(np.exp(model.q[old_state]))
         action = np.random.choice(range(5), p=probs_td)
-        action_taken, reward, alive, state = env.step(action, mode='AI')
-        new_state = (env.snake.head.grid[0] + env.snake.head.dir[0], env.snake.head.grid[1] + env.snake.head.dir[1],
-                     env.number['grid'][0], env.number['grid'][1], dir2i(env.snake.head.dir))
+
+        action_taken, reward, alive = env.step(action, mode='AI')
+
         # Assign reward and update q function
         if action_taken:
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
-            model.update_q(reward*20, old_state, action, new_state)
+            next_state = env.get_next_state()
+            model.update_q(reward*20, old_state, action, next_state)
         if number_moves == 1000 or env.number['n'] > 50 or not alive:
             break
+    # Book-keeping
     model.performance = update_performance(model.performance, env.number['n'], level_moves)
     print(i, " - score: %i (%.1f), moves: %i (%.0f)" %
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
