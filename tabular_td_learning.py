@@ -1,5 +1,4 @@
-from game.snake_objects import Snake
-from game.snake_functions import *
+from game.snake_functions import check_quit_event
 from performance_mon import *
 from game.snake_engine import GameSession
 import os.path
@@ -49,11 +48,10 @@ def debug_msg_2(old_state, new_state):
 
 
 # MAIN FUNCTION
-np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
 fix_pos = [5, 10]
-env = GameSession(screen_size, grid_size, delay=0, fix_number = fix_pos, render=False)
+env = GameSession(screen_size, grid_size, delay=0, fix_number=fix_pos, render=True)
 
 # Model name
 file_dir = "results/"
@@ -62,13 +60,13 @@ file_post = "_a04_g099r20_mean_f"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
 
-if not os.path.isdir(file_dir):
-    os.mkdir(file_dir)
 # Maybe load previous model
 if os.path.isfile(file_name):
     model = TabTD(grid_size)
     model.load(file_name)
 else:
+    if not os.path.isdir(file_dir):
+        os.mkdir(file_dir)
     model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=15)
 
 # Main loop

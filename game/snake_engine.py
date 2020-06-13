@@ -51,7 +51,6 @@ class GameSession:
         # Create snake and first number
         self.alive = True
         self.snake = Snake("square", self.screen_size, self.grid_size, speed=5)  # style "square" or "round"
-        self.head = self.snake.head
         self.gen_number(0, white)
         self.update_screen()
         return False, 0, self.alive
