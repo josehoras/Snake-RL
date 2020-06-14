@@ -41,6 +41,9 @@ class SnakePart(pygame.sprite.Sprite):
         if self.on_grid():
             self.grid = self.rect.topleft // self.size
 
+    def copy(self, other):
+        self.dir = other.dir
+        self.grid = other.grid
     # def __eq__(self, other):
     #     pass
 
@@ -61,9 +64,6 @@ class Snake():
             self.body.add(SnakePart(self.grid[i], self.direction[i], self.style, self.sq_size))
         self.head = SnakePart(self.grid[-1], self.direction[-1], self.style, self.sq_size)
 
-    def new_square(self, part):
-        return part.on_grid() and (part.pos2grid() != part.grid).any()
-
     def step(self):
         self.head.step(self.speed)
         if len(self.body) >= self.length:
@@ -82,16 +82,14 @@ class Snake():
         if ((self.head.grid + self.head.dir) == number_pos).all():
             self.length += self.length_increase
             return "just_ate"
-        return "alive"
+        return ""
 
     def update_move(self, pressed_keys, number_pos, mode='manual'):
         action_taken = False
         # Check if head is in the middle of a square. If so just perform its move
         if not self.head.on_grid():
             self.step()                     # Move
-            # Check if we have reached a new full square
-            if self.new_square(self.head):
-                self.head.update_grid()
+            self.head.update_grid()         # Update head grid if it reaches a new full square
         else:
             # If head is in a full square, check input to decide into which square to move next
             self.head.dir = self.update_dir(pressed_keys, mode=mode)
@@ -101,11 +99,10 @@ class Snake():
             # Move
             self.step()
         # Check if tail has reached a new grid square and remove that part of the body
-        if self.new_square(self.tail):
-            to_del = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
-            self.tail.dir = to_del.dir
-            self.tail.grid = to_del.grid
-            self.body.remove(to_del)
+        if self.tail.on_grid() and (self.tail.pos2grid() != self.tail.grid).any():
+            overlap = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
+            self.tail.copy(overlap)
+            self.body.remove(overlap)
             self.grid = np.array([p.grid for p in self.body])
         return action_taken, self.check_state(number_pos)
 

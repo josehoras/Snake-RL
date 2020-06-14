@@ -45,7 +45,7 @@ def debug_msg_2(old_state, new_state):
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
 fix_pos = [5, 10]
-env = GameSession(screen_size, grid_size, delay=0, fix_number=fix_pos, render=True)
+env = GameSession(screen_size, grid_size, delay=0, fix_number=fix_pos, render=False)
 
 # Model name
 file_dir = "results/"
