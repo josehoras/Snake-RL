@@ -29,6 +29,9 @@ class SnakePart(pygame.sprite.Sprite):
     def grid2pos(self):
         return (self.grid * self.size).astype('float64')
 
+    def pos2grid(self):
+        return self.rect.topleft // self.size
+
     def update(self, speed):
         self.pos += speed * self.dir
         self.rect.topleft = self.pos
@@ -47,7 +50,7 @@ class SnakePart(pygame.sprite.Sprite):
 class Snake(pygame.sprite.Group):
     def __init__(self, style, screen_size, grid_size, speed=0.05):
         super(Snake, self).__init__()
-        self.grid = grid_size//2 - [[2,0], [1,0], [0,0]]
+        self.grid = grid_size//2 - [[2, 0], [1, 0], [0, 0]]
         self.direction = np.array([[1, 0], [1, 0], [1, 0]])
 
         self.screen_size = screen_size
@@ -108,7 +111,7 @@ class Snake(pygame.sprite.Group):
                 self.state = "just_ate"
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
-            to_del = [sp for sp in self if (sp.grid == self.tail.rect.topleft // self.sq_size).all()][0]
+            to_del = [sp for sp in self if (sp.grid == self.tail.pos2grid()).all()][0]
             self.grid = self.grid[[(g != self.tail.grid).any() for g in self.grid]]
             self.tail.dir = to_del.dir
             self.tail.grid = to_del.grid
@@ -136,11 +139,11 @@ class Snake(pygame.sprite.Group):
                 self.state = "just_ate"
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
-            to_del = [sp for sp in self if (sp.grid == self.tail.rect.topleft // self.sq_size).all()]
+            to_del = [sp for sp in self if (sp.grid == self.tail.rect.topleft // self.sq_size).all()][0]
             self.grid = self.grid[[(g != self.tail.grid).any() for g in self.grid]]
-            self.tail.dir = to_del[0].dir
-            self.tail.grid = to_del[0].grid
-            self.remove(to_del[0])
+            self.tail.dir = to_del.dir
+            self.tail.grid = to_del.grid
+            self.remove(to_del)
         # Check dying conditions
         if self.head.rect.top < 0 or self.head.rect.bottom > self.screen_size[1]:
             self.state = "dead"
