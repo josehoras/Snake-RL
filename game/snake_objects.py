@@ -33,9 +33,13 @@ class SnakePart(pygame.sprite.Sprite):
         self.pos += speed * self.dir
         self.rect.topleft = self.pos
 
-    def onGrid(self):
+    def on_grid(self):
         # head or tail are on grid if they fall exactly on a full grid square
         return (self.rect.topleft %  self.size == [0, 0]).all()
+
+    def update_grid(self):
+        if self.onGrid():
+            self.grid = self.rect.topleft // self.size
 
     # def __eq__(self, other):
     #     pass
@@ -61,11 +65,8 @@ class Snake(pygame.sprite.Group):
         self.head = SnakePart(self.grid[-1], self.direction[-1], self.style, self.sq_size)
 
     def new_square(self, part):
-        return part.onGrid() and \
+        return part.on_grid() and \
                 (part.rect.topleft // self.sq_size != part.grid).any()
-
-    def middle_square(self, part):
-        return not ((part.rect.topleft %  self.sq_size == [0, 0]).all())
 
     def step(self):
         self.head.update(self.speed)
@@ -82,7 +83,7 @@ class Snake(pygame.sprite.Group):
         self.state = "alive"
         action_taken = False
         # Check if head is in the middle of a square. If so just perform its move
-        if self.middle_square(self.head):
+        if not self.head.on_grid():
             self.step()                     # Move
             # Check if we have reached a new full square
             if self.new_square(self.head):
