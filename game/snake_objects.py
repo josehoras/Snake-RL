@@ -56,7 +56,7 @@ class Snake():
         self.sq_size = screen_size // grid_size
         self.style = style
         self.length = 3
-        self.length_increase = 3
+        self.length_increase = 0
         self.speed = speed
         self.dir_buffer = self.direction[0]
         # Generate snake parts
@@ -76,7 +76,7 @@ class Snake():
             return True
         return False
 
-    def check_state(self, number_pos):
+    def check_event(self, number_pos):
         # Check dying conditions for new position
         if self.out_of_screen():# or len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
             return "dead"
@@ -91,8 +91,7 @@ class Snake():
             if mode == 'AI':
                 self.head.dir = self.update_dir(pressed_keys, mode=mode) # check input to decide into which square to move
             if mode == 'manual':
-                self.dir_buffer = self.update_dir(pressed_keys, mode=mode)
-                self.head.dir = self.dir_buffer
+                self.head.dir = self.update_dir(pressed_keys, mode=mode)
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.array([p.grid for p in self.body])
             self.step()                     # Move
@@ -106,10 +105,10 @@ class Snake():
             self.tail.copy(overlap)
             self.body.remove(overlap)
             self.grid = np.array([p.grid for p in self.body])
-        return take_action, self.check_state(number_pos)
+        return take_action, self.check_event(number_pos)
 
     def update_dir(self, pressed_keys, mode='manual'):
-        if mode =='manual':
+        if mode == 'manual':
             if pressed_keys[K_LEFT] and self.head.dir[0] != 1:
                 return np.array([-1, 0])
             if pressed_keys[K_RIGHT] and self.head.dir[0] != -1:
