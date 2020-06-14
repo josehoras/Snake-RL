@@ -58,6 +58,7 @@ class Snake():
         self.length = 3
         self.length_increase = 3
         self.speed = speed
+        self.dir_buffer = self.direction[0]
         # Generate snake parts
         self.tail = SnakePart(self.grid[0], self.direction[0], self.style, self.sq_size)
         for i in range(1, len(self.grid)-1):
@@ -85,19 +86,20 @@ class Snake():
         return ""
 
     def update_move(self, pressed_keys, number_pos, mode='manual'):
-        take_action = self.head.on_grid()
-        # Check if head is in the middle of a square. If so just perform its move
+        take_action = self.head.on_grid()   # if head is on grid perform action
         if take_action:
-            # If head is in a full square, check input to decide into which square to move next
-            self.head.dir = self.update_dir(pressed_keys, mode=mode)
+            if mode == 'AI':
+                self.head.dir = self.update_dir(pressed_keys, mode=mode) # check input to decide into which square to move
+            if mode == 'manual':
+                self.dir_buffer = self.update_dir(pressed_keys, mode=mode)
+                self.head.dir = self.dir_buffer
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.array([p.grid for p in self.body])
-            # Move
-            self.step()
+            self.step()                     # Move
         else:
+            self.dir_buffer = self.update_dir(pressed_keys, mode=mode)
             self.step()                     # Move
             self.head.update_grid()         # Update head grid if it reaches a new full square
-
         # Check if tail has reached a new grid square and remove that part of the body
         if self.tail.on_grid() and (self.tail.pos2grid() != self.tail.grid).any():
             overlap = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
@@ -116,6 +118,7 @@ class Snake():
                 return np.array([0, -1])
             if pressed_keys[K_DOWN] and self.head.dir[1] != -1:
                 return np.array([0, 1])
+        return self.dir_buffer
         if mode == 'AI':
             if pressed_keys == 0 and self.head.dir[0] != 1:
                 return np.array([-1, 0])
