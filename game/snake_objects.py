@@ -109,7 +109,7 @@ class Snake():
         return take_action, self.check_state(number_pos)
 
     def update_dir(self, pressed_keys, mode='manual'):
-        if mode =='manual':
+        if mode == 'manual':
             if pressed_keys[K_LEFT] and self.head.dir[0] != 1:
                 return np.array([-1, 0])
             if pressed_keys[K_RIGHT] and self.head.dir[0] != -1:
