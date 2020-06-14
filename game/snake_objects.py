@@ -57,15 +57,23 @@ class Snake(pygame.sprite.Group):
     def middle_square(self, part):
         return not ((part.rect.topleft %  self.sq_size == [0, 0]).all())
 
+    def step(self):
+        self.head.update(self.speed)
+        if len(self) >= self.length:
+            self.tail.update(self.speed)
+
+    def out_of_screen(self):
+        if self.head.rect.top < 0 or self.head.rect.bottom > self.screen_size[1]\
+                or self.head.rect.left < 0 or self.head.rect.right > self.screen_size[0]:
+            return True
+        return False
+
     def update_move(self, pressed_keys, number_pos, mode='manual'):
         self.state = "alive"
         action_taken = False
         # Check if head is in the middle of a square. If so just perform its move
         if self.middle_square(self.head):
-            # Move the head and, if the length is ok, the tail
-            self.head.update(self.speed)
-            if len(self) >= self.length:
-                self.tail.update(self.speed)
+            self.step()                     # Move
             # Check if we have reached a new full square
             if self.new_square(self.head):
                 self.head.grid = self.head.rect.topleft // self.sq_size
@@ -77,14 +85,10 @@ class Snake(pygame.sprite.Group):
             self.head.dir = self.next_dir
             self.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.append(self.grid, [self.head.grid], axis=0)
-            # Move the head and, if the length is ok, the tail
-            self.head.update(self.speed)
-            if len(self) >= self.length:
-                self.tail.update(self.speed)
+            # Move
+            self.step()
             # Check dying conditions for new position
-            if self.head.rect.top < 0 or self.head.rect.bottom > self.screen_size[1]:
-                self.state = "dead"
-            if self.head.rect.left < 0 or self.head.rect.right > self.screen_size[0]:
+            if self.out_of_screen():
                 self.state = "dead"
             # if len(pygame.sprite.spritecollide(self.head, self, False)) > 1:
             #     self.state = "dead"
