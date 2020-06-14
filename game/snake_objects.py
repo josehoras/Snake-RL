@@ -85,26 +85,26 @@ class Snake():
         return ""
 
     def update_move(self, pressed_keys, number_pos, mode='manual'):
-        action_taken = False
+        take_action = self.head.on_grid()
         # Check if head is in the middle of a square. If so just perform its move
-        if not self.head.on_grid():
-            self.step()                     # Move
-            self.head.update_grid()         # Update head grid if it reaches a new full square
-        else:
+        if take_action:
             # If head is in a full square, check input to decide into which square to move next
             self.head.dir = self.update_dir(pressed_keys, mode=mode)
-            action_taken = True
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.array([p.grid for p in self.body])
             # Move
             self.step()
+        else:
+            self.step()                     # Move
+            self.head.update_grid()         # Update head grid if it reaches a new full square
+
         # Check if tail has reached a new grid square and remove that part of the body
         if self.tail.on_grid() and (self.tail.pos2grid() != self.tail.grid).any():
             overlap = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
             self.tail.copy(overlap)
             self.body.remove(overlap)
             self.grid = np.array([p.grid for p in self.body])
-        return action_taken, self.check_state(number_pos)
+        return take_action, self.check_state(number_pos)
 
     def update_dir(self, pressed_keys, mode='manual'):
         if mode == 'manual':
