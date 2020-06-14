@@ -58,7 +58,7 @@ class Snake():
         self.length_increase = 3
         self.speed = speed
         self.state = "alive"
-
+        # Generate snake parts
         self.tail = SnakePart(self.grid[0], self.direction[0], self.style, self.sq_size)
         for i in range(1, len(self.grid)-1):
             self.body.add(SnakePart(self.grid[i], self.direction[i], self.style, self.sq_size))
@@ -95,7 +95,7 @@ class Snake():
             # apply new direction to head and add new body part
             self.head.dir = self.next_dir
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
-            self.grid = np.append(self.grid, [self.head.grid], axis=0)
+            self.grid = np.append(self.grid, self.head.grid)
             # Move
             self.step()
             # Check dying conditions for new position
@@ -109,14 +109,10 @@ class Snake():
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
             to_del = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
-            self.grid = self.grid[[(g != self.tail.grid).any() for g in self.grid]]
-            # self.grid = [p.grid for p in self]
-            print(self.grid)
-            print([p.grid for p in self.body])
             self.tail.dir = to_del.dir
             self.tail.grid = to_del.grid
             self.body.remove(to_del)
-            print([p.grid for p in self.body])
+            self.grid = np.array([p.grid for p in self.body])
         return action_taken
 
 
