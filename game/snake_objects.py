@@ -111,7 +111,7 @@ class Snake(pygame.sprite.Group):
                 self.state = "just_ate"
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
-            to_del = [sp for sp in self if (sp.grid == self.tail.pos2grid()).all()][0]
+            to_del = [sp for sp in self if sp.rect.colliderect(self.tail.rect)][0]
             self.grid = self.grid[[(g != self.tail.grid).any() for g in self.grid]]
             self.tail.dir = to_del.dir
             self.tail.grid = to_del.grid
