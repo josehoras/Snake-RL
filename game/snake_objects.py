@@ -109,7 +109,7 @@ class Snake():
         return take_action, self.check_state(number_pos)
 
     def update_dir(self, pressed_keys, mode='manual'):
-        if mode == 'manual':
+        if mode =='manual':
             if pressed_keys[K_LEFT] and self.head.dir[0] != 1:
                 return np.array([-1, 0])
             if pressed_keys[K_RIGHT] and self.head.dir[0] != -1:
@@ -118,7 +118,7 @@ class Snake():
                 return np.array([0, -1])
             if pressed_keys[K_DOWN] and self.head.dir[1] != -1:
                 return np.array([0, 1])
-        return self.dir_buffer
+            return self.dir_buffer
         if mode == 'AI':
             if pressed_keys == 0 and self.head.dir[0] != 1:
                 return np.array([-1, 0])
@@ -128,7 +128,7 @@ class Snake():
                 return np.array([0, -1])
             if pressed_keys == 3 and self.head.dir[1] != -1:
                 return np.array([0, 1])
-        return self.head.dir
+            return self.head.dir
 
     def plot(self, screen):
         screen.blit(self.head.body, self.head.rect)
