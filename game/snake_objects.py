@@ -46,7 +46,6 @@ class SnakePart(pygame.sprite.Sprite):
 
 class Snake():
     def __init__(self, style, screen_size, grid_size, speed=0.05):
-        # super(Snake, self).__init__()
         self.grid = grid_size//2 - [[2, 0], [1, 0], [0, 0]]
         self.direction = np.array([[1, 0], [1, 0], [1, 0]])
         self.body = pygame.sprite.Group()
@@ -65,8 +64,7 @@ class Snake():
         self.head = SnakePart(self.grid[-1], self.direction[-1], self.style, self.sq_size)
 
     def new_square(self, part):
-        return part.on_grid() and \
-                (part.rect.topleft // self.sq_size != part.grid).any()
+        return part.on_grid() and (part.pos2grid() != part.grid).any()
 
     def step(self):
         self.head.update(self.speed)
