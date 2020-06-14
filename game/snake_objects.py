@@ -7,24 +7,27 @@ white = 255, 255, 255
 blue = 0, 0, 255
 
 class SnakePart(pygame.sprite.Sprite):
-    def __init__(self, grid, dir, style, sq_size):
+    def __init__(self, grid, dir, style, size):
         super(SnakePart, self).__init__()
         self.dir = dir
-        self.sq_size = sq_size
-        self.body = pygame.Surface(sq_size)
+        self.size = size
+        self.body = pygame.Surface(size)
         self.rect = self.body.get_rect()
         if style == "square":
             self.body.fill(white)
             pygame.draw.rect(self.body, black, self.rect, 1)
         if style == "round":
-            pygame.draw.circle(self.body, (0, 255, 0), sq_size//2 , min(sq_size)//2)
+            pygame.draw.circle(self.body, (0, 255, 0), size//2 , min(size)//2)
         # pygame.draw.rect(self.body, blue, self.rect, 0)
         # pygame.draw.line(self.body, white, (0,0), abs(sq_size * self.dir))
         # pygame.draw.line(self.body, white, (sq_size - (1,1)) * abs(self.dir[::-1]), sq_size - (1,1) )
 
         self.grid = grid
-        self.pos = (grid * sq_size).astype('float64')
+        self.pos = self.grid2pos()
         self.rect.topleft = self.pos
+
+    def grid2pos(self):
+        return (self.grid * self.size).astype('float64')
 
     def update(self, speed):
         self.pos += speed * self.dir
@@ -32,7 +35,10 @@ class SnakePart(pygame.sprite.Sprite):
 
     def onGrid(self):
         # head or tail are on grid if they fall exactly on a full grid square
-        return (self.rect.topleft %  self.sq_size == [0, 0]).all()
+        return (self.rect.topleft %  self.size == [0, 0]).all()
+
+    # def __eq__(self, other):
+    #     pass
 
 class Snake(pygame.sprite.Group):
     def __init__(self, style, screen_size, grid_size, speed=0.05):
@@ -45,7 +51,7 @@ class Snake(pygame.sprite.Group):
         self.style = style
         self.next_dir = self.direction[-1]
         self.length = 3
-        self.length_increase = 0
+        self.length_increase = 3
         self.speed = speed
         self.state = "alive"
 
