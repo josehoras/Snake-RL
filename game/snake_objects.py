@@ -29,7 +29,7 @@ class SnakePart(pygame.sprite.Sprite):
     def pos2grid(self):
         return self.rect.topleft // self.size
 
-    def update(self, speed):
+    def step(self, speed):
         self.pos += speed * self.dir
         self.rect.topleft = self.pos
 
@@ -38,7 +38,7 @@ class SnakePart(pygame.sprite.Sprite):
         return (self.rect.topleft %  self.size == [0, 0]).all()
 
     def update_grid(self):
-        if self.onGrid():
+        if self.on_grid():
             self.grid = self.rect.topleft // self.size
 
     # def __eq__(self, other):
@@ -52,7 +52,6 @@ class Snake():
         self.screen_size = screen_size
         self.sq_size = screen_size // grid_size
         self.style = style
-        self.next_dir = self.direction[-1]
         self.length = 3
         self.length_increase = 3
         self.speed = speed
@@ -67,9 +66,9 @@ class Snake():
         return part.on_grid() and (part.pos2grid() != part.grid).any()
 
     def step(self):
-        self.head.update(self.speed)
+        self.head.step(self.speed)
         if len(self.body) >= self.length:
-            self.tail.update(self.speed)
+            self.tail.step(self.speed)
 
     def out_of_screen(self):
         if self.head.rect.top < 0 or self.head.rect.bottom > self.screen_size[1]\
@@ -85,15 +84,13 @@ class Snake():
             self.step()                     # Move
             # Check if we have reached a new full square
             if self.new_square(self.head):
-                self.head.grid = self.head.rect.topleft // self.sq_size
+                self.head.update_grid()
         else:
             # If head is in a full square, check input to decide into which square to move next
-            self.update_dir(pressed_keys, mode=mode)
+            self.head.dir = self.update_dir(pressed_keys, mode=mode)
             action_taken = True
-            # apply new direction to head and add new body part
-            self.head.dir = self.next_dir
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
-            self.grid = np.append(self.grid, self.head.grid)
+            self.grid = np.array([p.grid for p in self.body])
             # Move
             self.step()
             # Check dying conditions for new position
@@ -113,61 +110,26 @@ class Snake():
             self.grid = np.array([p.grid for p in self.body])
         return action_taken
 
-
-    def old_update_move(self, pressed_keys, number_pos, mode='manual'):
-        # self.state = "alive"
-        # Move the head and, if the length is ok, the tail
-        self.head.update(self.speed)
-        if len(self) >= self.length:
-            self.tail.update(self.speed)
-        # Check if head has reached a new grid square and add a new part to body
-        if self.new_square(self.head):
-            # Check user input
-            self.update_dir(pressed_keys, mode=mode)
-
-            self.head.grid = self.head.rect.topleft // self.sq_size
-            self.head.dir = self.next_dir
-            self.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
-            self.grid = np.append(self.grid, [self.head.grid], axis=0)
-            if (self.head.grid == number_pos).all():
-                self.length += self.length_increase
-                self.state = "just_ate"
-        # Check if tail has reached a new grid square and remove that part of the body
-        if self.new_square(self.tail):
-            to_del = [sp for sp in self if (sp.grid == self.tail.rect.topleft // self.sq_size).all()][0]
-            self.grid = self.grid[[(g != self.tail.grid).any() for g in self.grid]]
-            self.tail.dir = to_del.dir
-            self.tail.grid = to_del.grid
-            self.remove(to_del)
-
-        # Check dying conditions
-        if self.head.rect.top < 0 or self.head.rect.bottom > self.screen_size[1]:
-            self.state = "dead"
-        if self.head.rect.left < 0 or self.head.rect.right > self.screen_size[0]:
-            self.state = "dead"
-        if len(pygame.sprite.spritecollide(self.head, self, False)) > 1:
-            self.state = "dead"
-
-
     def update_dir(self, pressed_keys, mode='manual'):
         if mode == 'manual':
             if pressed_keys[K_LEFT] and self.head.dir[0] != 1:
-                self.next_dir = np.array([-1, 0])
+                return np.array([-1, 0])
             if pressed_keys[K_RIGHT] and self.head.dir[0] != -1:
-                self.next_dir = np.array([1, 0])
+                return np.array([1, 0])
             if pressed_keys[K_UP] and self.head.dir[1] != 1:
-                self.next_dir = np.array([0, -1])
+                return np.array([0, -1])
             if pressed_keys[K_DOWN] and self.head.dir[1] != -1:
-                self.next_dir = np.array([0, 1])
+                return np.array([0, 1])
         if mode == 'AI':
             if pressed_keys == 0 and self.head.dir[0] != 1:
-                self.next_dir = np.array([-1, 0])
+                return np.array([-1, 0])
             if pressed_keys == 1 and self.head.dir[0] != -1:
-                self.next_dir = np.array([1, 0])
+                return np.array([1, 0])
             if pressed_keys == 2 and self.head.dir[1] != 1:
-                self.next_dir = np.array([0, -1])
+                return np.array([0, -1])
             if pressed_keys == 3 and self.head.dir[1] != -1:
-                self.next_dir = np.array([0, 1])
+                return np.array([0, 1])
+        return self.head.dir
 
     def plot(self, screen):
         screen.blit(self.head.body, self.head.rect)
