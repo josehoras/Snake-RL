@@ -76,6 +76,14 @@ class Snake():
             return True
         return False
 
+    def check_state(self, number_pos):
+        # Check dying conditions for new position
+        if self.out_of_screen() or len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
+            self.state = "dead"
+        if ((self.head.grid + self.head.dir) == number_pos).all():
+            self.length += self.length_increase
+            self.state = "just_ate"
+
     def update_move(self, pressed_keys, number_pos, mode='manual'):
         self.state = "alive"
         action_taken = False
@@ -93,14 +101,7 @@ class Snake():
             self.grid = np.array([p.grid for p in self.body])
             # Move
             self.step()
-            # Check dying conditions for new position
-            if self.out_of_screen():
-                self.state = "dead"
-            if len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
-                self.state = "dead"
-            if ((self.head.grid + self.head.dir) == number_pos).all():
-                self.length += self.length_increase
-                self.state = "just_ate"
+            self.check_state(number_pos)
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
             to_del = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
