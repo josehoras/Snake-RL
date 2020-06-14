@@ -55,12 +55,12 @@ class GameSession:
         self.update_screen()
         return False, 0, self.alive
 
-    def check_game_event(self):
+    def check_game_event(self, event):
         reward = 0
-        if self.snake.state == "just_ate":
+        if event == "just_ate":
             self.gen_number(self.number['n'], white)
             reward = 1
-        if self.snake.state == "dead":
+        if event == "dead":
             reward = -1
             self.alive = False
         return reward
@@ -75,11 +75,11 @@ class GameSession:
     def step(self, action, mode='manual'):
         if not self.alive:
             self.start_game()
-        action_taken = self.snake.update_move(action, self.number['grid'], mode=mode)
+        action_taken, event = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
         self.delay = check_delay(self.delay, pygame.key.get_pressed())
         pygame.time.delay(self.delay)
-        reward = self.check_game_event()
+        reward = self.check_game_event(event)
         return action_taken, reward, self.alive
 
     def exit(self):

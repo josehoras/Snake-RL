@@ -55,7 +55,6 @@ class Snake():
         self.length = 3
         self.length_increase = 3
         self.speed = speed
-        self.state = "alive"
         # Generate snake parts
         self.tail = SnakePart(self.grid[0], self.direction[0], self.style, self.sq_size)
         for i in range(1, len(self.grid)-1):
@@ -78,14 +77,14 @@ class Snake():
 
     def check_state(self, number_pos):
         # Check dying conditions for new position
-        if self.out_of_screen() or len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
-            self.state = "dead"
+        if self.out_of_screen():# or len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
+            return "dead"
         if ((self.head.grid + self.head.dir) == number_pos).all():
             self.length += self.length_increase
-            self.state = "just_ate"
+            return "just_ate"
+        return "alive"
 
     def update_move(self, pressed_keys, number_pos, mode='manual'):
-        self.state = "alive"
         action_taken = False
         # Check if head is in the middle of a square. If so just perform its move
         if not self.head.on_grid():
@@ -101,7 +100,6 @@ class Snake():
             self.grid = np.array([p.grid for p in self.body])
             # Move
             self.step()
-            self.check_state(number_pos)
         # Check if tail has reached a new grid square and remove that part of the body
         if self.new_square(self.tail):
             to_del = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
@@ -109,7 +107,7 @@ class Snake():
             self.tail.grid = to_del.grid
             self.body.remove(to_del)
             self.grid = np.array([p.grid for p in self.body])
-        return action_taken
+        return action_taken, self.check_state(number_pos)
 
     def update_dir(self, pressed_keys, mode='manual'):
         if mode == 'manual':
