@@ -10,6 +10,7 @@ class SnakePart(pygame.sprite.Sprite):
     def __init__(self, grid, dir, style, sq_size):
         super(SnakePart, self).__init__()
         self.dir = dir
+        self.sq_size = sq_size
         self.body = pygame.Surface(sq_size)
         self.rect = self.body.get_rect()
         if style == "square":
@@ -29,6 +30,9 @@ class SnakePart(pygame.sprite.Sprite):
         self.pos += speed * self.dir
         self.rect.topleft = self.pos
 
+    def onGrid(self):
+        # head or tail are on grid if they fall exactly on a full grid square
+        return (self.rect.topleft %  self.sq_size == [0, 0]).all()
 
 class Snake(pygame.sprite.Group):
     def __init__(self, style, screen_size, grid_size, speed=0.05):
@@ -51,8 +55,8 @@ class Snake(pygame.sprite.Group):
         self.head = SnakePart(self.grid[-1], self.direction[-1], self.style, self.sq_size)
 
     def new_square(self, part):
-        return ((part.rect.topleft %  self.sq_size == [0, 0]).all() and \
-                (part.rect.topleft // self.sq_size != part.grid).any())
+        return part.onGrid() and \
+                (part.rect.topleft // self.sq_size != part.grid).any()
 
     def middle_square(self, part):
         return not ((part.rect.topleft %  self.sq_size == [0, 0]).all())
