@@ -35,7 +35,7 @@ class SnakePart(pygame.sprite.Sprite):
 
     def on_grid(self):
         # head or tail are on grid if they fall exactly on a full grid square
-        return (self.rect.topleft %  self.size == [0, 0]).all()
+        return (self.rect.topleft % self.size == [0, 0]).all()
 
     def update_grid(self):
         if self.on_grid():
@@ -48,7 +48,7 @@ class SnakePart(pygame.sprite.Sprite):
     #     pass
 
 class Snake():
-    def __init__(self, style, screen_size, grid_size, speed=0.05):
+    def __init__(self, screen_size, grid_size, style='square', speed=0.05):
         self.grid = grid_size//2 - [[2, 0], [1, 0], [0, 0]]
         self.direction = np.array([[1, 0], [1, 0], [1, 0]])
         self.body = pygame.sprite.Group()
