@@ -88,10 +88,7 @@ class Snake():
     def update_move(self, pressed_keys, number_pos, mode='manual'):
         take_action = self.head.on_grid()   # if head is on grid perform action
         if take_action:
-            if mode == 'AI':
-                self.head.dir = self.update_dir(pressed_keys, mode=mode) # check input to decide into which square to move
-            if mode == 'manual':
-                self.head.dir = self.update_dir(pressed_keys, mode=mode)
+            self.head.dir = self.update_dir(pressed_keys, mode=mode)
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.array([p.grid for p in self.body])
             self.step()                     # Move
