@@ -5,7 +5,7 @@ import pickle
 
 
 class TabTD:
-    def __init__(self, grid, alpha = 0.4, gamma = .99, r = 15):
+    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.alpha = alpha
         self.gamma = gamma
@@ -18,12 +18,23 @@ class TabTD:
     def save(self, file_name):
         pickle.dump([self.q, self.alpha, self.gamma, self.r, self.performance], open(file_name, 'wb'))
 
-    def update_q(self, r, s, a, s_p):
+    def policy(self, state):
+        probs = np.exp(model.q[state]) / sum(np.exp(model.q[state]))
+        a = np.random.choice(range(5), p=probs)
+        return a
+
+    def update_q(self, s, a, r, s_p):
         try:
-            self.q[s][a] += self.alpha * (r + self.gamma * np.mean(model.q[s_p]) - model.q[s][a])
+            self.q[s][a] += self.alpha * (r + self.gamma * np.mean(self.q[s_p]) - self.q[s][a])
         except:
             self.q[s][a] += self.alpha * r
 
+    def sarsa_update(self, s, a, r, s_p):
+        try:
+            a_p = self.policy(s_p)
+            self.q[s][a] += self.alpha * (r + self.gamma * self.q[s_p][a_p] - self.q[s][a])
+        except:
+            self.q[s][a] += self.alpha * r
 
 def debug_msg_1(old_state, probs_td, action, new_state):
     d_name = ['left', 'right', 'up', 'down']
@@ -44,13 +55,13 @@ def debug_msg_2(old_state, new_state):
 # MAIN FUNCTION
 screen_size = np.array([400, 400])
 grid_size = np.array([20, 20])
-fix_pos = [5, 10]
-env = GameSession(screen_size, grid_size, delay=0, fix_number=fix_pos, render=False)
+fix_pos = [0, 0]
+env = GameSession(screen_size, grid_size, delay=0, fix_number='', render=False)
 
 # Model name
 file_dir = "results/"
-file_base = "v3"
-file_post = "_a04_g099r20_mean_f"
+file_base = "sarsa"
+file_post = "_a04g099r20_full"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
 
@@ -61,7 +72,7 @@ if os.path.isfile(file_name):
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=15)
+    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=20)
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -75,8 +86,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
 
         # Take action depending on policy
         old_state = env.get_state()
-        probs_td = np.exp(model.q[old_state]) / sum(np.exp(model.q[old_state]))
-        action = np.random.choice(range(5), p=probs_td)
+        action = model.policy(old_state)
 
         action_taken, reward, alive = env.step(action, mode='AI')
 
@@ -86,7 +96,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 score = env.number['n']
                 number_moves = 0
             next_state = env.get_next_state()
-            model.update_q(reward*20, old_state, action, next_state)
+            model.sarsa_update(old_state, action, reward * model.r, next_state)
         if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping
@@ -95,7 +105,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
            model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
     print()
-    if i % 50 == 0:
+    if i % 500 == 0:
         plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
