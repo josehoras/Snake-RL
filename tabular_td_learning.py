@@ -2,11 +2,13 @@ from game.snake_engine import GameSession
 from performance_mon import *
 import os.path
 import pickle
+import random
 
 
 class TabTD:
     def __init__(self, grid, alpha=0.4, gamma=0.99, r=15):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
+        self.q2 = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.alpha = alpha
         self.gamma = gamma
         self.r = r
@@ -20,7 +22,7 @@ class TabTD:
 
     def policy(self, state):
         p = np.exp(model.q[state]) / sum(np.exp(model.q[state]))
-        a = np.random.choice(range(5), p=probs)
+        a = np.random.choice(range(5), p=p)
         return a
 
     def update_q(self, s, a, r, s_p):
@@ -35,6 +37,32 @@ class TabTD:
             self.q[s][a] += self.alpha * (r + self.gamma * self.q[s_p][a_p] - self.q[s][a])
         except:
             self.q[s][a] += self.alpha * r
+
+    def q_learning_update(self, s, a, r, s_p):
+        try:
+            self.q[s][a] += self.alpha * (r + self.gamma * np.max(self.q[s_p]) - self.q[s][a])
+        except:
+            self.q[s][a] += self.alpha * r
+
+    def expected_sarsa_update(self, s, a, r, s_p):
+        try:
+            p = np.exp(model.q[s_p]) / sum(np.exp(model.q[s_p]))
+            self.q[s][a] += self.alpha * (r + self.gamma * np.sum(p*self.q[s_p]) - self.q[s][a])
+        except:
+            self.q[s][a] += self.alpha * r
+
+    def double_q_learning_update(self, s, a, r, s_p):
+        try:
+            if random.randint(0,1) == 0:
+                self.q[s][a] += self.alpha * (r + self.gamma * self.q2[s_p][np.argmax(self.q[s_p])] - self.q[s][a])
+            else:
+                self.q2[s][a] += self.alpha * (r + self.gamma * self.q[s_p][np.argmax(self.q2[s_p])] - self.q2[s][a])
+        except:
+            if random.randint(0, 1) == 0:
+                self.q[s][a] += self.alpha * r
+            else:
+                self.q2[s][a] += self.alpha * r
+
 
 def debug_msg_1(old_state, probs_td, action, new_state):
     d_name = ['left', 'right', 'up', 'down']
