@@ -19,7 +19,7 @@ class TabTD:
         pickle.dump([self.q, self.alpha, self.gamma, self.r, self.performance], open(file_name, 'wb'))
 
     def policy(self, state):
-        probs = np.exp(model.q[state]) / sum(np.exp(model.q[state]))
+        p = np.exp(model.q[state]) / sum(np.exp(model.q[state]))
         a = np.random.choice(range(5), p=probs)
         return a
 
