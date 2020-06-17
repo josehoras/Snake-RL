@@ -2,7 +2,6 @@ import random
 import numpy as np
 import pygame
 from pygame.locals import *
-import matplotlib.pyplot as plt
 
 black = 0, 0, 0
 white = 255, 255, 255
@@ -34,16 +33,6 @@ def check_pause_event():
             return True
     return False
 
-def check_delay(delay, key):
-    if key[K_PAGEUP]:
-        delay += 1
-        print(delay)
-        pygame.time.delay(100)
-    if key[K_PAGEDOWN] and delay >=1:
-        delay -= 1
-        print(delay)
-        pygame.time.delay(100)
-    return delay
 
 # Functions to generte numbers and plot messages
 def generate_number(n, filled_grid, grid_size, font, color=(255, 255, 255), set=0):
