@@ -81,10 +81,10 @@ def debug_msg_2(old_state, new_state):
 
 
 # MAIN FUNCTION
-screen_size = np.array([400, 400])
-grid_size = np.array([20, 20])
+screen_size = [400, 400]
+grid_size = [20, 20]
 fix_pos = [0, 0]
-env = GameSession(screen_size, grid_size, delay=0, fix_number='', render=False)
+env = GameSession(screen_size, grid_size, fix_number='', render=False)
 
 # Model name
 file_dir = "results/"

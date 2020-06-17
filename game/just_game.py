@@ -1,5 +1,5 @@
 from game.snake_engine import GameSession
-import numpy as np
+
 import pygame
 from pygame.locals import *
 
@@ -12,8 +12,8 @@ def check_quit_event():
     return False
 
 
-screen_size = np.array([400, 400])
-grid_size = np.array([20, 20])
+screen_size = [400, 400]
+grid_size = [20, 20]
 env = GameSession(screen_size, grid_size, delay=40)#, fix_number = [4,4])
 # pygame.init()
 # screen = pygame.display.set_mode(screen_size)

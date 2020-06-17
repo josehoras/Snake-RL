@@ -14,9 +14,9 @@ blue = 0, 0, 255
 
 class GameSession:
     def __init__(self, screen_size, grid_size, delay=0, render=True, fix_number=''):
-        self.screen_size = screen_size
-        self.grid_size = grid_size
-        self.sq_size = screen_size // grid_size
+        self.screen_size = np.array(screen_size)
+        self.grid_size = np.array(grid_size)
+        self.sq_size = self.screen_size // self.grid_size
         self.delay = delay
         self.render = render
         self.number = {'n': 0, 'grid': np.array([0,0]), 'txt': 0}
