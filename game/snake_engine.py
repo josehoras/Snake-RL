@@ -77,10 +77,20 @@ class GameSession:
             self.start_game()
         action_taken, event = self.snake.update_move(action, self.number['grid'], mode=mode)
         self.update_screen()
-        self.delay = check_delay(self.delay, pygame.key.get_pressed())
+        self.check_delay(pygame.key.get_pressed())
         pygame.time.delay(self.delay)
         reward = self.check_game_event(event)
         return action_taken, reward, self.alive
+
+    def check_delay(self, key):
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_PAGEUP:
+                    self.delay += 1
+                if event.key == K_PAGEDOWN and self.delay >= 1:
+                    self.delay -= 1
+                print("Delay: %i ms" % self.delay)
+                pygame.time.delay(100)
 
     def exit(self):
         plot_msg("Press Esc. to quit", self.screen, self.font)
