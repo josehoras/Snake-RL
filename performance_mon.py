@@ -35,20 +35,22 @@ def plot_screens(screens):
 
 def plot_performance(performance, file_base_name):
     fig = plt.figure(figsize=(7, 7), dpi=100)
-
+    length = len(performance['moves'])
+    lwidth = 1 - min(length//1000, 9) * 0.1
+    msize = 2 - min(length//1000, 10) * 0.1
     plt.subplot(2, 1, 1)
     plt.title("total moves", fontsize=14)
     plt.xticks(fontsize=10)
     plt.yticks(fontsize=10)
     plt.grid(which='major', axis='y', linestyle=':', linewidth=0.5)
-    plt.plot(performance['moves'])
+    plt.plot(performance['moves'], linewidth=0, marker=".", markersize=msize)
     plt.plot(performance['smooth_moves'])
     plt.subplot(2, 1, 2)
     plt.title("score", fontsize=14)
     plt.xticks(fontsize=10)
     plt.yticks(fontsize=10)
     plt.grid(which='major', axis='y', linestyle=':', linewidth=0.5)
-    plt.plot(performance['score'])  # , color='g')
+    plt.plot(performance['score'], linewidth=lwidth)#, marker=",", markersize=1)  # , color='g')
     plt.plot(performance['smooth_score'])
     # ax1 = fig.add_subplot(111)
     # ax2 = ax1.twinx()
@@ -58,12 +60,12 @@ def plot_performance(performance, file_base_name):
     # ax2.plot(performance['score'], color='g')
     # ax2.set_ylim([0, 10])
     plt.tight_layout()
-    fig.savefig(file_base_name + '.png')
+    fig.savefig(file_base_name + '_perf.png')
     plt.close("all")
     # plt.show()
 
 
-def plot_value(value, x, y, file_name='td/value.png', alpha='', gamma='', r='', it=''):
+def plot_value(value, x, y, file_name='', alpha='', gamma='', r='', it=''):
     def probs(matrix):
         # print(matrix)
         return np.exp(matrix) / np.sum(np.exp(matrix), axis=1).reshape(-1, 1)
@@ -109,7 +111,7 @@ def plot_value(value, x, y, file_name='td/value.png', alpha='', gamma='', r='', 
     plt.close("all")
 
 
-def plot_probs(model, x, y, file_name='td/value.png'):
+def plot_probs(model, x, y, file_name=''):
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
@@ -160,5 +162,5 @@ def plot_probs(model, x, y, file_name='td/value.png'):
     # fig.colorbar(im, cax=cbar_ax)
     fig.subplots_adjust(right=1.05)
     fig.colorbar(im, ax=axs, shrink=0.54, pad=0.02, aspect=10, format='%.1f')
-    fig.savefig(file_name)
+    fig.savefig(file_name + '_prob.png')
     plt.close("all")
