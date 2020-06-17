@@ -12,7 +12,8 @@ class TabTD:
         self.alpha = alpha
         self.gamma = gamma
         self.r = r
-        self.T = 0.1
+        self.T = 1
+        self.e = 0
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
     def load(self, file_name):
@@ -20,6 +21,11 @@ class TabTD:
 
     def save(self, file_name):
         pickle.dump([self.q, self.alpha, self.gamma, self.r, self.performance], open(file_name, 'wb'))
+
+    def terminal(self, state):
+        if state[0] < 0 or state[0] > 19 or state[1] < 0 or state[1] > 19:
+            return True
+        return False
 
     def policy(self, state):
         p = np.exp(self.q[state]/self.T) / sum(np.exp(self.q[state]/self.T))
@@ -33,31 +39,23 @@ class TabTD:
             a = random.randint(0, len(self.q[state]))
         return a
 
-    def update_q(self, s, a, r, s_p):
-        try:
-            self.q[s][a] += self.alpha * (r + self.gamma * np.mean(self.q[s_p]) - self.q[s][a])
-        except:
-            self.q[s][a] += self.alpha * r
+    def sarsa(self, s):
+        a = self.policy(s)
+        return self.q[s][a]
 
-    def sarsa_update(self, s, a, r, s_p):
-        try:
-            a_p = self.policy(s_p)
-            self.q[s][a] += self.alpha * (r + self.gamma * self.q[s_p][a_p] - self.q[s][a])
-        except:
-            self.q[s][a] += self.alpha * r
+    def expected_sarsa(self, s):
+        p = np.exp(self.q[s] / self.T) / sum(np.exp(self.q[s] / self.T))
+        return np.sum(p * self.q[s])
 
-    def q_learning_update(self, s, a, r, s_p):
-        try:
-            self.q[s][a] += self.alpha * (r + self.gamma * np.max(self.q[s_p]) - self.q[s][a])
-        except:
-            self.q[s][a] += self.alpha * r
+    def q_learning(self, s):
+        return np.max(self.q[s])
 
-    def expected_sarsa_update(self, s, a, r, s_p):
-        try:
-            p = np.exp(model.q[s_p]) / sum(np.exp(model.q[s_p]))
-            expectation = np.sum(p*self.q[s_p])
-            self.q[s][a] += self.alpha * (r + self.gamma * expectation - self.q[s][a])
-        except:
+    def update_q(self, func, s, a, r, s_p):
+        r *= self.r
+        if not self.terminal(s_p):
+            v_p = func(s_p)
+            self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
+        else:
             self.q[s][a] += self.alpha * r
 
     def double_q_learning_update(self, s, a, r, s_p):
@@ -109,7 +107,7 @@ if os.path.isfile(file_name) and not restart:
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.8, gamma=0.9, r=1)
+    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=20)
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -132,7 +130,8 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
                 score = env.number['n']
                 number_moves = 0
             next_state = env.get_next_state()
-            model.expected_sarsa_update(old_state, action, reward * model.r, next_state)
+            # model.sarsa_update(old_state, action, reward * model.r, next_state)
+            model.update_q(model.q_learning, old_state, action, reward, next_state)
         if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping
