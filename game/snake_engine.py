@@ -1,7 +1,17 @@
 from game.snake_objects import Snake
-from game.snake_functions import *
+import random
+import numpy as np
+import pygame
+from pygame.locals import *
 
-# white = 255, 255, 255
+black = 0, 0, 0
+white = 255, 255, 255
+grey = 200, 200, 200
+red = 255, 0, 0
+green = 0, 255, 0
+blue = 0, 0, 255
+
+
 class GameSession:
     def __init__(self, screen_size, grid_size, delay=0, render=True, fix_number=''):
         self.screen_size = screen_size
@@ -92,9 +102,24 @@ class GameSession:
                 print("Delay: %i ms" % self.delay)
                 pygame.time.delay(100)
 
-    def exit(self):
-        plot_msg("Press Esc. to quit", self.screen, self.font)
+    def plot_msg(self, msg):
+        x = (self.screen.get_width() - self.font.size(msg)[0]) / 2
+        y = (self.screen.get_height() - self.font.size(msg)[1]) / 2
+        msg_surface = self.font.render(msg, True, (250, 0, 0))
+        self.screen.blit(msg_surface, (x, y))
         pygame.display.update()
-        while not(check_quit_event()):
+
+    def check_quit_event(self):
+        for event in pygame.event.get():
+            if event.type == KEYDOWN and event.key == K_ESCAPE:
+                return True
+            elif event.type == QUIT:
+                return True
+        return False
+
+    def exit(self):
+        self.plot_msg("Press Esc. to quit", self.screen, self.font)
+        pygame.display.update()
+        while not(self.check_quit_event()):
             pass
         pygame.display.quit()
