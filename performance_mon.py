@@ -111,11 +111,11 @@ def plot_value(value, x, y, file_name='', alpha='', gamma='', r='', it=''):
     plt.close("all")
 
 
-def plot_probs(model, x, y, file_name=''):
+def plot_probs(model, x, y, T=1, file_name=''):
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
-    probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
+    probs_plane = np.exp(value_plane/T) / np.sum(np.exp(value_plane/T), axis=3).reshape(20, 20, 4, 1)
 
     # d = random.randint(0, 3)
     d = 0
