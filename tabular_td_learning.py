@@ -7,7 +7,7 @@ import pygame
 from pygame.locals import *
 
 class TabTD:
-    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy=''):
+    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy='', update_rule='sarsa'):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.q2 = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.alpha = alpha
@@ -19,6 +19,9 @@ class TabTD:
             self.policy = self.e_greedy_policy
         else:
             self.policy = self.sofmax_policy
+        if update_rule=='sarsa':
+            self.update = self.sarsa
+
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
     def load(self, file_name):
@@ -55,10 +58,10 @@ class TabTD:
     def q_learning(self, s):
         return np.max(self.q[s])
 
-    def update_q(self, func, s, a, r, s_p):
+    def update_q(self, s, a, r, s_p):
         r *= self.r
         if not self.terminal(s_p):
-            v_p = func(s_p)
+            v_p = self.update(s_p)
             self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
         else:
             self.q[s][a] += self.alpha * r
@@ -120,7 +123,7 @@ if os.path.isfile(file_name) and not restart:
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=1)
+    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=1, policy='softmax', update_rule='sarsa')
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -149,7 +152,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
             # next_state = env.get_state()
 
             # model.double_q_learning_update(old_state, action, reward, next_state)
-            model.update_q(model.sarsa, old_state, action, reward, new_state)
+            model.update_q(old_state, action, reward, new_state)
 
         if number_moves == 1000 or env.number['n'] > 50:
             break
