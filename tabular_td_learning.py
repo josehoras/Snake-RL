@@ -8,7 +8,7 @@ from pygame.locals import *
 
 class TabTD:
     def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy='', update_rule='sarsa'):
-        self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.1)
+        self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0, dtype=float)
         self.alpha = alpha
         self.gamma = gamma
         self.r = r
@@ -139,7 +139,7 @@ file_base = "e-sarsa"
 file_post = "_a04g099r20"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
-restart = False
+restart = True
 batch = 100
 # Maybe load previous model
 if os.path.isfile(file_name) and not restart:
