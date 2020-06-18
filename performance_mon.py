@@ -115,8 +115,8 @@ def plot_probs(model, x, y, T=1, file_name=''):
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
-    probs_plane = np.exp(value_plane/T) / np.sum(np.exp(value_plane/T), axis=3).reshape(20, 20, 4, 1)
-
+    # probs_plane = np.exp(value_plane/T) / np.sum(np.exp(value_plane/T), axis=3).reshape(20, 20, 4, 1)
+    probs_plane = value_plane
     # d = random.randint(0, 3)
     d = 0
 
@@ -146,7 +146,7 @@ def plot_probs(model, x, y, T=1, file_name=''):
             for j in ds[d][i]:
                 probs_sum += np.swapaxes(probs_plane[:, :, d, j], 0, 1)
 
-            im = axs[-1].imshow(probs_sum, vmin=0, vmax=1, interpolation='nearest', cmap='viridis')
+            im = axs[-1].imshow(probs_sum, interpolation='nearest', cmap='viridis')#, vmin=0, vmax=1)
             # if i==2:
             #     cbar = fig.colorbar(im, ax=ax, shrink=0.62, format='%.1f') #,use_gridspec=True
 
