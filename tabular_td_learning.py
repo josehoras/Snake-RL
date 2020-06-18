@@ -7,7 +7,7 @@ import pygame
 from pygame.locals import *
 
 class TabTD:
-    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15):
+    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy=''):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.q2 = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.alpha = alpha
@@ -15,6 +15,10 @@ class TabTD:
         self.r = r
         self.T = 1
         self.e = 0
+        if policy=='e-greedy':
+            self.policy = self.e_greedy_policy
+        else:
+            self.policy = self.sofmax_policy
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
     def load(self, file_name):
@@ -28,7 +32,7 @@ class TabTD:
             return True
         return False
 
-    def policy(self, state):
+    def sofmax_policy(self, state):
         p = np.exp(self.q[state]/self.T) / sum(np.exp(self.q[state]/self.T))
         a = np.random.choice(range(5), p=p)
         return a
@@ -108,7 +112,7 @@ file_base = "e-sarsa"
 file_post = "_a04g099r20"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
-restart = True
+restart = False
 # Maybe load previous model
 if os.path.isfile(file_name) and not restart:
     model = TabTD(grid_size)
