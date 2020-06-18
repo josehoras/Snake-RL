@@ -9,7 +9,6 @@ from pygame.locals import *
 class TabTD:
     def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy='', update_rule='sarsa'):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
-        self.q2 = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
         self.alpha = alpha
         self.gamma = gamma
         self.r = r
@@ -19,9 +18,18 @@ class TabTD:
             self.policy = self.e_greedy_policy
         else:
             self.policy = self.sofmax_policy
-        if update_rule=='sarsa':
-            self.update = self.sarsa
-
+        if update_rule == 'expected_sarsa':
+            self.update_q = self.update
+            self.update_rule = self.expected_sarsa
+        elif update_rule == 'q-learning':
+            self.update_q = self.update
+            self.update_rule == self.q_learning
+        elif update_rule == 'double-q-learning':
+            self.q2 = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0.2)
+            self.update_q = self.double_q_learning
+        else:
+            self.update_q = self.update
+            self.update_rule = self.sarsa
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
     def load(self, file_name):
@@ -58,15 +66,15 @@ class TabTD:
     def q_learning(self, s):
         return np.max(self.q[s])
 
-    def update_q(self, s, a, r, s_p):
+    def update(self, s, a, r, s_p):
         r *= self.r
         if not self.terminal(s_p):
-            v_p = self.update(s_p)
+            v_p = self.update_rule(s_p)
             self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
         else:
             self.q[s][a] += self.alpha * r
 
-    def double_q_learning_update(self, s, a, r, s_p):
+    def double_q_learning(self, s, a, r, s_p):
         r *= self.r
         if not self.terminal(s_p):
             if random.randint(0,1) == 0:
@@ -148,9 +156,6 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
-            # next_state = env.get_next_state()
-            # next_state = env.get_state()
-
             # model.double_q_learning_update(old_state, action, reward, next_state)
             model.update_q(old_state, action, reward, new_state)
 
