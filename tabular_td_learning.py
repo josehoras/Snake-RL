@@ -3,7 +3,8 @@ from performance_mon import *
 import os.path
 import pickle
 import random
-
+import pygame
+from pygame.locals import *
 
 class TabTD:
     def __init__(self, grid, alpha=0.4, gamma=0.99, r=15):
@@ -59,39 +60,47 @@ class TabTD:
             self.q[s][a] += self.alpha * r
 
     def double_q_learning_update(self, s, a, r, s_p):
-        try:
+        r *= self.r
+        if not self.terminal(s_p):
             if random.randint(0,1) == 0:
                 self.q[s][a] += self.alpha * (r + self.gamma * self.q2[s_p][np.argmax(self.q[s_p])] - self.q[s][a])
             else:
                 self.q2[s][a] += self.alpha * (r + self.gamma * self.q[s_p][np.argmax(self.q2[s_p])] - self.q2[s][a])
-        except:
+        else:
             if random.randint(0, 1) == 0:
                 self.q[s][a] += self.alpha * r
             else:
                 self.q2[s][a] += self.alpha * r
 
 
-def debug_msg_1(old_state, probs_td, action, new_state):
-    d_name = ['left', 'right', 'up', 'down']
-    a_name = ['left', 'right', 'up', 'down', 'no']
-    print("At ", old_state[0], old_state[1], "going ", d_name[old_state[-1]])
-    print("value: ", model.q[old_state], "on ", old_state)
-    print("probs: ", probs_td)
-    print("action taken: %s (%i)" % (a_name[action], action))
-    # print("new state mean: ", np.mean(model.q[new_state]))
+def debug_msg(before='', rew=0, a=False, s=''):
+    if before:
+        print('_'*80)
+        print("Before move")
+    else:
+        print("After move")
+
+    print("   State:  ",  s, env.snake.head.rect.topleft)
+    print("   On grid: ", env.snake.head.on_grid())
+    if not before:
+        if a: print("   Action taken")
+        print("   Reward: ", rew)
+        print('_' * 80)
+    while not check_continue_event():
+        pass
 
 
-def debug_msg_2(old_state, new_state):
-    d_name = ['left', 'right', 'up', 'down']
-    print("new value: ", model.q[old_state])
-    print("new dir: ", d_name[new_state[-1]], "on ", new_state)
-
+def check_continue_event():
+    for event in pygame.event.get():
+        if event.type == KEYDOWN and event.key == K_SPACE:
+            return True
+    return False
 
 # MAIN FUNCTION
 screen_size = [400, 400]
 grid_size = [20, 20]
-fix_pos = [0, 0]
-env = GameSession(screen_size, grid_size, fix_number=fix_pos, render=False)
+fix_pos = [5, 10]
+env = GameSession(screen_size, grid_size, fix_number=fix_pos, delay=0, render=False)
 
 # Model name
 file_dir = "results/"
@@ -107,7 +116,7 @@ if os.path.isfile(file_name) and not restart:
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=20)
+    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=1)
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -122,16 +131,22 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         # Take action depending on policy
         old_state = env.get_state()
         action = model.policy(old_state)
+        # debug_msg(before=True, s=old_state)
 
-        action_taken, reward, alive = env.step(action, mode='AI')
+        action_taken, reward, new_state, alive = env.step(action, mode='AI')
+
+        # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
         # Assign reward and update q function
         if action_taken:
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
-            next_state = env.get_next_state()
-            # model.sarsa_update(old_state, action, reward * model.r, next_state)
-            model.update_q(model.q_learning, old_state, action, reward, next_state)
+            # next_state = env.get_next_state()
+            # next_state = env.get_state()
+
+            # model.double_q_learning_update(old_state, action, reward, next_state)
+            model.update_q(model.sarsa, old_state, action, reward, new_state)
+
         if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping

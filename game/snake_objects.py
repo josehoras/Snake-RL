@@ -39,7 +39,9 @@ class SnakePart(pygame.sprite.Sprite):
 
     def update_grid(self):
         if self.on_grid():
-            self.grid = self.rect.topleft // self.size
+            self.grid = (self.rect.topleft // self.size)
+        else:
+            self.grid += self.dir
 
     def copy(self, other):
         self.dir = other.dir
@@ -80,29 +82,32 @@ class Snake():
         # Check dying conditions for new position
         if self.out_of_screen():# or len(pygame.sprite.spritecollide(self.head, self.body, False)) > 1:
             return "dead"
-        if ((self.head.grid + self.head.dir) == number_pos).all():
+        if (self.head.grid == number_pos).all():
             self.length += self.length_increase
             return "just_ate"
         return ""
 
     def update_move(self, pressed_keys, number_pos, mode='manual'):
         take_action = self.head.on_grid()   # if head is on grid perform action
+        event = ''
         if take_action:
+            # self.head.update_grid()  # Update head grid if it reaches a new full square
             self.head.dir = self.update_dir(pressed_keys, mode=mode)
             self.body.add(SnakePart(self.head.grid, self.head.dir, self.style, self.sq_size))
             self.grid = np.array([p.grid for p in self.body])
             self.step()                     # Move
+            self.head.update_grid()  # Update head grid if it reaches a new full square
+            event = self.check_event(number_pos)
         else:
             self.dir_buffer = self.update_dir(pressed_keys, mode=mode)
             self.step()                     # Move
-            self.head.update_grid()         # Update head grid if it reaches a new full square
         # Check if tail has reached a new grid square and remove that part of the body
         if self.tail.on_grid() and (self.tail.pos2grid() != self.tail.grid).any():
             overlap = [sp for sp in self.body if sp.rect.colliderect(self.tail.rect)][0]
             self.tail.copy(overlap)
             self.body.remove(overlap)
             self.grid = np.array([p.grid for p in self.body])
-        return take_action, self.check_event(number_pos)
+        return take_action, event
 
     def update_dir(self, pressed_keys, mode='manual'):
         if mode == 'manual':

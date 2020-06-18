@@ -34,7 +34,7 @@ class GameSession:
     def gen_number(self, n, color):
         self.number['n'] = n + 1
         gap = 0
-        if self.fix_number != '':
+        if self.fix_number != '':# and self.number['n']==1:
             self.number['grid'] = np.array(self.fix_number)
         else:
             c = [0]
@@ -67,20 +67,21 @@ class GameSession:
 
     def check_game_event(self, event):
         reward = 0
+        s = self.get_state()
         if event == "just_ate":
-            self.gen_number(self.number['n'], white)
             reward = 1
+            self.gen_number(self.number['n'], white)
         if event == "dead":
             reward = -1
             self.alive = False
-        return reward
+        return reward, s
 
     def get_state(self):
-        return (self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i())
+        return self.snake.head.grid[0], self.snake.head.grid[1], self.number['grid'][0], self.number['grid'][1], self.dir2i()
 
     def get_next_state(self):
         return (self.snake.head.grid[0] + self.snake.head.dir[0], self.snake.head.grid[1] + self.snake.head.dir[1],
-                     self.number['grid'][0], self.number['grid'][1], self.dir2i())
+                self.number['grid'][0], self.number['grid'][1], self.dir2i())
 
     def step(self, action, mode='manual'):
         if not self.alive:
@@ -89,12 +90,12 @@ class GameSession:
         self.update_screen()
         self.check_delay(pygame.key.get_pressed())
         pygame.time.delay(self.delay)
-        reward = self.check_game_event(event)
-        return action_taken, reward, self.alive
+        reward, state = self.check_game_event(event)
+        return action_taken, reward, state, self.alive
 
     def check_delay(self, key):
         for event in pygame.event.get():
-            if event.type == KEYDOWN:
+            if event.type == KEYDOWN:# and event.key in [K_PAGEUP, K_PAGEDOWN]:
                 if event.key == K_PAGEUP:
                     self.delay += 1
                 if event.key == K_PAGEDOWN and self.delay >= 1:
