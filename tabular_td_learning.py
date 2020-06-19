@@ -87,11 +87,10 @@ class TabTD:
 
     def update(self, s, a, r, s_p):
         r *= self.r
+        v_p = 0
         if not self.terminal(s_p):
             v_p = self.update_rule(s_p)
-            self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
-        else:
-            self.q[s][a] += self.alpha * (r - self.q[s][a])
+        self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
 
     def double_q_learning(self, s, a, r, s_p):
         r *= self.r
