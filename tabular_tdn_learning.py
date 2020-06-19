@@ -17,7 +17,7 @@ class TabTD:
         if policy == 'e-greedy':
             self.policy = self.e_greedy_policy
         else:
-            self.policy = self.sofmax_policy
+            self.policy = self.softmax_policy
         if update_rule == 'expected_sarsa':
             self.update_q = self.update
             self.update_rule = self.expected_sarsa
@@ -48,7 +48,7 @@ class TabTD:
             return True
         return False
 
-    def sofmax_policy(self, state):
+    def softmax_policy(self, state):
         p = np.exp(self.q[state]/self.T) / sum(np.exp(self.q[state]/self.T))
         a = np.random.choice(range(5), p=p)
         return a
@@ -146,6 +146,8 @@ else:
         os.mkdir(file_dir)
     model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=1, policy='e-greedy', update_rule='expected_sarsa')
 
+N = 4
+
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
     _, _, alive = env.start_game()
@@ -157,14 +159,11 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     while alive:
         level_moves += 1
         number_moves += 1
-
         # Take action depending on policy
         old_state = env.get_state()
         action = model.policy(old_state)
         # debug_msg(before=True, s=old_state)
-
         action_taken, reward, new_state, alive = env.step(action, mode='AI')
-
         # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
         # Assign reward and update q function
         if action_taken:

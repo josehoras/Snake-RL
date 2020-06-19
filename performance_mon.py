@@ -124,10 +124,11 @@ def plot_probs(model, x, y, file_name=''):
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
-    if model.policy == model.e_greedy_policy:
-        probs_plane = e_expected(value_plane, model.e)
-    else:
+    if model.policy == model.softmax_policy:
         probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
+    else:
+        probs_plane = e_expected(value_plane, model.e)
+
 
     # d = random.randint(0, 3)
     d = 0

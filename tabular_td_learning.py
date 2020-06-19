@@ -17,7 +17,7 @@ class TabTD:
         if policy == 'e-greedy':
             self.policy = self.e_greedy_policy
         else:
-            self.policy = self.sofmax_policy
+            self.policy = self.softmax_policy
         if update_rule == 'expected_sarsa':
             self.update_q = self.update
             self.update_rule = self.expected_sarsa
@@ -48,7 +48,7 @@ class TabTD:
             return True
         return False
 
-    def sofmax_policy(self, state):
+    def softmax_policy(self, state):
         p = np.exp(self.q[state]/self.T) / sum(np.exp(self.q[state]/self.T))
         a = np.random.choice(range(5), p=p)
         return a
@@ -56,7 +56,7 @@ class TabTD:
     def it_plus(self):
         self.it += 1
         self.e = 1 / self.it
-        if self.e < 0.01: self.e = 0
+        # if self.e < 0.01: self.e = 0
         print('E-greedy: %.3f' % self.e)
 
     def e_greedy_policy(self, state):
