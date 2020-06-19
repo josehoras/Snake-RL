@@ -60,7 +60,7 @@ class TabTD:
 
     def update_e(self):
         self.e = 1 / self.it
-        if self.e < 0.008: self.e = 0
+        if self.e < 0.01: self.e = 0
         print('E-greedy: %.3f' % self.e)
 
     def e_greedy_policy(self, state):
@@ -68,22 +68,20 @@ class TabTD:
             a = np.argmax(self.q[state])
         else:
             a = random.randint(0, len(self.q[state])-1)
-        # print(a)
         return a
 
-    def e_expected(self, state):
+    def e_expected(self, state, r):
         p = np.full_like(state, self.e * (1/len(state)), dtype=float)
-        p[np.argmax(state)] += 1 - self.e
-        # print(p, np.sum(p))
+        p[np.argmax(self.q[state])] += 1 - self.e
         return p
 
     def sarsa(self, s):
         a = self.policy(s)
         return self.q[s][a]
 
-    def expected_sarsa(self, s):
+    def expected_sarsa(self, s, r):
         if self.policy == self.e_greedy_policy:
-            p = self.e_expected(s)
+            p = self.e_expected(s, r)
         else:
             p = np.exp(self.q[s] / self.T) / sum(np.exp(self.q[s] / self.T))
         return np.sum(p * self.q[s])
@@ -94,7 +92,7 @@ class TabTD:
     def update(self, s, a, r, s_p):
         r *= self.r
         if not self.terminal(s_p):
-            v_p = self.update_rule(s_p)
+            v_p = self.update_rule(s_p, r)
             self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
         else:
             self.q[s][a] += self.alpha * (r - self.q[s][a])
@@ -140,17 +138,17 @@ def check_continue_event():
 # MAIN FUNCTION
 screen_size = [400, 400]
 grid_size = [20, 20]
-fix_pos = [0, 0]
-env = GameSession(screen_size, grid_size, fix_number=fix_pos, delay=0, render=True)
+fix_pos = [5, 10]
+env = GameSession(screen_size, grid_size, fix_number='', delay=0, render=False)
 
 # Model name
 file_dir = "results/"
 file_base = "e-sarsa"
-file_post = "_a04g099r20"
+file_post = "_a04g09gr1000_full"
 file_ext = ".td"
 file_name = file_dir + file_base + file_post + file_ext
-restart = True
-batch = 10
+restart = False
+batch = 1000
 # Maybe load previous model
 if os.path.isfile(file_name) and not restart:
     model = TabTD(grid_size)
@@ -191,17 +189,17 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping
-    print("%0.3f, %0.3f" % (np.min(model.q[:, :, 5, 10]), np.max(model.q[:, :, 5, 10])))
+    # print("%06.3f, %06.3f" % (np.min(model.q[:, :, 5, 10]), np.max(model.q[:, :, 5, 10])))
     model.performance = update_performance(model.performance, env.number['n'], level_moves)
     print(i, " - score: %i (%.1f), moves: %i (%.0f)" %
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
            model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
     print()
-    if i % 50 == 0:
+    if i % 500 == 0:
         plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
-        plot_probs(model, fix_pos[0], fix_pos[1], T=model.T, file_name=file_dir + file_base + file_post)
+        plot_probs(model, fix_pos[0], fix_pos[1], file_name=file_dir + file_base + file_post)
         model.save(file_name)
 
 env.exit()
