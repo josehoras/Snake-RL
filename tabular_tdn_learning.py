@@ -5,12 +5,12 @@ import pickle
 import random
 
 
-class TabTD:
-    def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy='', update_rule='sarsa'):
+class TabTD_n:
+    def __init__(self, grid, alpha=0.4, gamma=0.99, n=1, policy='', update_rule='sarsa'):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0, dtype=float)
         self.alpha = alpha
         self.gamma = gamma
-        self.r = r
+        self.n = n
         self.T = 1
         self.it = 2
         self.e = 0.5
@@ -33,13 +33,13 @@ class TabTD:
         self.performance = {'score':[], 'smooth_score':[], 'moves':[], 'smooth_moves':[]}
 
     def load(self, file_name):
-        self.q, self.alpha, self.gamma, self.r, \
+        self.q, self.alpha, self.gamma, self.n, \
         self.it, self.e, self.policy, self.update_q,\
         self.update_rule,self.performance = pickle.load(open(file_name, 'rb'), encoding='latin1')
         print('E-greedy: %.3f' % self.e)
 
     def save(self, file_name):
-        pickle.dump([self.q, self.alpha, self.gamma, self.r,
+        pickle.dump([self.q, self.alpha, self.gamma, self.n,
                      self.it, self.e, self.policy, self.update_q,
                      self.update_rule, self.performance], open(file_name, 'wb'))
 
@@ -85,19 +85,18 @@ class TabTD:
     def q_learning(self, s):
         return np.max(self.q[s])
 
-    def update(self, S, A, R, tau, N, T):
+    def update(self, S, A, R, tau, T):
         # r *= self.r
         G = 0
-        for i in range(tau+1, min(tau+N, T)+1):
-            G += self.gamma ** (i-tau-1) * R[i]
+        for i in range(tau + 1, min(tau + self.n, T) + 1):
+            G += self.gamma ** (i - tau - 1) * R[i]
             # print(i,': ', self.gamma**(i-tau-1), '  R: ', R[i])
-        if not self.terminal(S[tau + N]): #tau + N < T+1:
+        if not self.terminal(S[tau + self.n]): #tau + N < T+1:
             # print(tau + N, ': ', self.gamma**N)
-            G += self.gamma ** N * self.update_rule(S[tau + N])
+            G += self.gamma ** self.n * self.update_rule(S[tau + self.n])
         # print('G: %.2f' % G)
         # print("Inc.: %.2f at state %s, action %i" % (self.alpha * (G - self.q[S[tau]][A[tau]]), S[tau], A[tau] ))
         self.q[S[tau]][A[tau]] += self.alpha * (G - self.q[S[tau]][A[tau]])
-
 
     def double_q_learning(self, s, a, r, s_p):
         r *= self.r
@@ -132,26 +131,25 @@ def debug_msg(before=True, rew=0, a=False, s=''):
 screen_size = [400, 400]
 grid_size = [20, 20]
 fix_pos = [5, 10]
-env = GameSession(screen_size, grid_size, fix_number=fix_pos, delay=0, render=False)
+env = GameSession(screen_size, grid_size, fix_number='', delay=0, render=False)
 
 # Model name
 file_dir = "results/"
 file_base = "sarsa"
-file_post = "_a04g09e10"
+file_post = "_a04g09e10_full"
 file_ext = ".tdn"
 file_name = file_dir + file_base + file_post + file_ext
 restart = True
-batch = 10
+batch = 1000
 # Maybe load previous model
 if os.path.isfile(file_name) and not restart:
-    model = TabTD(grid_size)
+    model = TabTD_n(grid_size)
     model.load(file_name)
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.4, gamma=0.2, r=1, policy='e-greedy', update_rule='sarsa')
+    model = TabTD_n(grid_size, alpha=0.4, gamma=0.8, n=10, policy='e-greedy', update_rule='sarsa')
 
-N = 4
 
 # Main loop
 for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -167,7 +165,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     R = [0]
 
     t = 0
-    tau = t - N + 1
+    tau = t - model.n + 1
     while tau < (T-1):
         action_taken = True
         if t < T:
@@ -191,10 +189,10 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
             # print(S)
             # print(A)
             # print(R)
-            tau = t - N + 1
+            tau = t - model.n + 1
             # print('tau: ', tau, 't: ', t, '  T: ', T)
             if tau >= 0:
-                model.update_q(S, A, R, tau, N, T)
+                model.update_q(S, A, R, tau, T)
 
             if env.number['n'] > score:
                 score = env.number['n']
@@ -220,7 +218,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
            model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
     print()
-    if i % 50 == 0:
+    if i % 500 == 0:
         plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)
