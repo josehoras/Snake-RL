@@ -111,15 +111,28 @@ def plot_value(value, x, y, file_name='', alpha='', gamma='', r='', it=''):
     plt.close("all")
 
 
-def plot_probs(model, x, y, T=1, file_name=''):
+def plot_probs(model, x, y, file_name=''):
+
+    def e_expected(state, e):
+        print(state.shape)
+        p = np.full_like(state, e * (1/len(state)), dtype=float)
+        print(p.shape)
+        for i in range(p.shape[0]):
+            for j in range(p.shape[1]):
+                for k in range(p.shape[2]):
+                    p[i][j][k][np.argmax(state[i][j][k])] += 1 - e
+        return p
+
     directions = ['left', 'right', 'up', 'down']
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
-    # probs_plane = np.exp(value_plane/T) / np.sum(np.exp(value_plane/T), axis=3).reshape(20, 20, 4, 1)
-    probs_plane = value_plane
+    if model.policy == model.e_greedy_policy:
+        probs_plane = e_expected(value_plane, model.e)
+    else:
+        probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
+
     # d = random.randint(0, 3)
     d = 0
-
     ds = [{0: [0, 1, 4], 1: [2], 2: [3]},
           {0: [0, 1, 4], 1: [2], 2: [3]},
           {0: [2, 3, 4], 1: [0], 2: [1]},
