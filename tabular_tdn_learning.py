@@ -14,10 +14,7 @@ class TabTD_n:
         self.T = 1
         self.it = 2
         self.e = 0.5
-        if policy == 'e-greedy':
-            self.policy = self.e_greedy_policy
-        else:
-            self.policy = self.softmax_policy
+        self.policy = self.e_greedy_policy
         if update_rule == 'expected_sarsa':
             self.update_q = self.update
             self.update_rule = self.expected_sarsa
@@ -47,11 +44,6 @@ class TabTD_n:
         if state[0] < 0 or state[0] > 19 or state[1] < 0 or state[1] > 19:
             return True
         return False
-
-    def softmax_policy(self, state):
-        p = np.exp(self.q[state]/self.T) / sum(np.exp(self.q[state]/self.T))
-        a = np.random.choice(range(5), p=p)
-        return a
 
     def it_plus(self):
         self.it += 1
@@ -86,7 +78,6 @@ class TabTD_n:
         return np.max(self.q[s])
 
     def update(self, S, A, R, tau, T):
-        # r *= self.r
         G = 0
         for i in range(tau + 1, min(tau + self.n, T) + 1):
             G += self.gamma ** (i - tau - 1) * R[i]
@@ -112,7 +103,7 @@ class TabTD_n:
                 self.q2[s][a] += self.alpha * r
 
 
-def debug_msg(before=True, rew=0, a=False, s=''):
+def debug_msg(before=True, rew=0):
     if before:
         print('_'*80)
         print("Before move")
@@ -124,7 +115,6 @@ def debug_msg(before=True, rew=0, a=False, s=''):
         # if a: print("   Action taken")
         print("   Reward: ", rew)
         print('_' * 80)
-
 
 
 # MAIN FUNCTION
@@ -172,45 +162,27 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
             # Take action depending on policy
             old_state = env.get_state()
             action = model.policy(old_state)
-
             action_taken, reward, new_state, alive = env.step(action, mode='AI')
-
-            # if model.terminal(new_state):
-            #     T = t
         if action_taken:
             level_moves += 1
             number_moves += 1
             # debug_msg(before=True, s=old_state)
             # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
-            # if alive:
             S.append(new_state)
             A.append(action)
             R.append(reward)
-            # print(S)
-            # print(A)
-            # print(R)
             tau = t - model.n + 1
-            # print('tau: ', tau, 't: ', t, '  T: ', T)
             if tau >= 0:
                 model.update_q(S, A, R, tau, T)
-
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
             t += 1
-            if alive and env.number['n'] <= 50:
+            if alive and env.number['n'] <= 50 and number_moves < 250:
                 T += 1
             # while not env.check_continue_event():
             #     pass
 
-        # Assign reward and update q function
-        # if action_taken:
-        #     if env.number['n'] > score:
-        #         score = env.number['n']
-        #         number_moves = 0
-        #     model.update_q(old_state, action, reward, new_state)
-        # if number_moves == 1000 or env.number['n'] > 50:
-        #     break
     # Book-keeping
     # print("%06.3f, %06.3f" % (np.min(model.q[:, :, 5, 10]), np.max(model.q[:, :, 5, 10])))
     model.performance = update_performance(model.performance, env.number['n'], level_moves)
