@@ -56,7 +56,7 @@ class TabTD:
     def it_plus(self):
         self.it += 1
         self.e = 1 / self.it
-        # if self.e < 0.01: self.e = 0
+        if self.e < 0.005: self.e = 0
         print('E-greedy: %.3f' % self.e)
 
     def e_greedy_policy(self, state):

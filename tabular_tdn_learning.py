@@ -85,13 +85,19 @@ class TabTD:
     def q_learning(self, s):
         return np.max(self.q[s])
 
-    def update(self, s, a, r, s_p):
-        r *= self.r
-        if not self.terminal(s_p):
-            v_p = self.update_rule(s_p)
-            self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
-        else:
-            self.q[s][a] += self.alpha * (r - self.q[s][a])
+    def update(self, S, A, R, tau, N, T):
+        # r *= self.r
+        G = 0
+        for i in range(tau+1, min(tau+N, T)+1):
+            G += self.gamma ** (i-tau-1) * R[i]
+            # print(i,': ', self.gamma**(i-tau-1), '  R: ', R[i])
+        if not self.terminal(S[tau + N]): #tau + N < T+1:
+            # print(tau + N, ': ', self.gamma**N)
+            G += self.gamma ** N * self.update_rule(S[tau + N])
+        # print('G: %.2f' % G)
+        # print("Inc.: %.2f at state %s, action %i" % (self.alpha * (G - self.q[S[tau]][A[tau]]), S[tau], A[tau] ))
+        self.q[S[tau]][A[tau]] += self.alpha * (G - self.q[S[tau]][A[tau]])
+
 
     def double_q_learning(self, s, a, r, s_p):
         r *= self.r
@@ -107,36 +113,35 @@ class TabTD:
                 self.q2[s][a] += self.alpha * r
 
 
-def debug_msg(before='', rew=0, a=False, s=''):
+def debug_msg(before=True, rew=0, a=False, s=''):
     if before:
         print('_'*80)
         print("Before move")
     else:
         print("After move")
     print("   State:  ",  s, env.snake.head.rect.topleft)
-    print("   On grid: ", env.snake.head.on_grid())
+    # print("   On grid: ", env.snake.head.on_grid())
     if not before:
-        if a: print("   Action taken")
+        # if a: print("   Action taken")
         print("   Reward: ", rew)
         print('_' * 80)
-    while not env.check_continue_event():
-        pass
+
 
 
 # MAIN FUNCTION
 screen_size = [400, 400]
 grid_size = [20, 20]
 fix_pos = [5, 10]
-env = GameSession(screen_size, grid_size, fix_number='', delay=0, render=False)
+env = GameSession(screen_size, grid_size, fix_number=fix_pos, delay=0, render=False)
 
 # Model name
 file_dir = "results/"
-file_base = "e-sarsa"
-file_post = "_a04g09gr1000_full"
-file_ext = ".td"
+file_base = "sarsa"
+file_post = "_a04g09e10"
+file_ext = ".tdn"
 file_name = file_dir + file_base + file_post + file_ext
-restart = False
-batch = 1000
+restart = True
+batch = 10
 # Maybe load previous model
 if os.path.isfile(file_name) and not restart:
     model = TabTD(grid_size)
@@ -144,7 +149,7 @@ if os.path.isfile(file_name) and not restart:
 else:
     if not os.path.isdir(file_dir):
         os.mkdir(file_dir)
-    model = TabTD(grid_size, alpha=0.4, gamma=0.99, r=1, policy='e-greedy', update_rule='expected_sarsa')
+    model = TabTD(grid_size, alpha=0.4, gamma=0.2, r=1, policy='e-greedy', update_rule='sarsa')
 
 N = 4
 
@@ -156,23 +161,58 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
     level_moves = 0
     number_moves = 0
     score = 1
-    while alive:
-        level_moves += 1
-        number_moves += 1
-        # Take action depending on policy
-        old_state = env.get_state()
-        action = model.policy(old_state)
-        # debug_msg(before=True, s=old_state)
-        action_taken, reward, new_state, alive = env.step(action, mode='AI')
-        # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
-        # Assign reward and update q function
+    T = 1
+    S = [env.get_state()]
+    A = []
+    R = [0]
+
+    t = 0
+    tau = t - N + 1
+    while tau < (T-1):
+        action_taken = True
+        if t < T:
+            # Take action depending on policy
+            old_state = env.get_state()
+            action = model.policy(old_state)
+
+            action_taken, reward, new_state, alive = env.step(action, mode='AI')
+
+            # if model.terminal(new_state):
+            #     T = t
         if action_taken:
+            level_moves += 1
+            number_moves += 1
+            # debug_msg(before=True, s=old_state)
+            # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
+            # if alive:
+            S.append(new_state)
+            A.append(action)
+            R.append(reward)
+            # print(S)
+            # print(A)
+            # print(R)
+            tau = t - N + 1
+            # print('tau: ', tau, 't: ', t, '  T: ', T)
+            if tau >= 0:
+                model.update_q(S, A, R, tau, N, T)
+
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
-            model.update_q(old_state, action, reward, new_state)
-        if number_moves == 1000 or env.number['n'] > 50:
-            break
+            t += 1
+            if alive and env.number['n'] <= 50:
+                T += 1
+            # while not env.check_continue_event():
+            #     pass
+
+        # Assign reward and update q function
+        # if action_taken:
+        #     if env.number['n'] > score:
+        #         score = env.number['n']
+        #         number_moves = 0
+        #     model.update_q(old_state, action, reward, new_state)
+        # if number_moves == 1000 or env.number['n'] > 50:
+        #     break
     # Book-keeping
     # print("%06.3f, %06.3f" % (np.min(model.q[:, :, 5, 10]), np.max(model.q[:, :, 5, 10])))
     model.performance = update_performance(model.performance, env.number['n'], level_moves)
@@ -180,7 +220,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
           (model.performance['score'][-1], model.performance['smooth_score'][-1],
            model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
     print()
-    if i % 500 == 0:
+    if i % 50 == 0:
         plot_performance(model.performance, file_dir + file_base + file_post)
         # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
         #            alpha=alpha, gamma=gamma, r=r, it=i)

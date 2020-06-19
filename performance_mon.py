@@ -125,7 +125,8 @@ def plot_probs(model, x, y, file_name=''):
     fig = plt.figure(figsize=(7, 7), dpi=100)
     value_plane = model.q[:, :, x, y]
     if model.policy == model.softmax_policy:
-        probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
+        # probs_plane = np.exp(value_plane) / np.sum(np.exp(value_plane), axis=3).reshape(20, 20, 4, 1)
+        probs_plane = value_plane
     else:
         probs_plane = e_expected(value_plane, model.e)
 
