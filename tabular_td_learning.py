@@ -55,9 +55,6 @@ class TabTD:
 
     def it_plus(self):
         self.it += 1
-        self.update_e()
-
-    def update_e(self):
         self.e = 1 / self.it
         if self.e < 0.01: self.e = 0
         print('E-greedy: %.3f' % self.e)
@@ -116,7 +113,6 @@ def debug_msg(before='', rew=0, a=False, s=''):
         print("Before move")
     else:
         print("After move")
-
     print("   State:  ",  s, env.snake.head.rect.topleft)
     print("   On grid: ", env.snake.head.on_grid())
     if not before:
@@ -165,7 +161,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         # Take action depending on policy
         old_state = env.get_state()
         action = model.policy(old_state)
-        debug_msg(before=True, s=old_state)
+        # debug_msg(before=True, s=old_state)
 
         action_taken, reward, new_state, alive = env.step(action, mode='AI')
 
