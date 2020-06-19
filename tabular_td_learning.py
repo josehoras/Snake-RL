@@ -3,8 +3,7 @@ from performance_mon import *
 import os.path
 import pickle
 import random
-import pygame
-from pygame.locals import *
+
 
 class TabTD:
     def __init__(self, grid, alpha=0.4, gamma=0.99, r=15, policy='', update_rule='sarsa'):
@@ -70,7 +69,7 @@ class TabTD:
             a = random.randint(0, len(self.q[state])-1)
         return a
 
-    def e_expected(self, state, r):
+    def e_expected(self, state):
         p = np.full_like(state, self.e * (1/len(state)), dtype=float)
         p[np.argmax(self.q[state])] += 1 - self.e
         return p
@@ -79,9 +78,9 @@ class TabTD:
         a = self.policy(s)
         return self.q[s][a]
 
-    def expected_sarsa(self, s, r):
+    def expected_sarsa(self, s):
         if self.policy == self.e_greedy_policy:
-            p = self.e_expected(s, r)
+            p = self.e_expected(s)
         else:
             p = np.exp(self.q[s] / self.T) / sum(np.exp(self.q[s] / self.T))
         return np.sum(p * self.q[s])
@@ -92,7 +91,7 @@ class TabTD:
     def update(self, s, a, r, s_p):
         r *= self.r
         if not self.terminal(s_p):
-            v_p = self.update_rule(s_p, r)
+            v_p = self.update_rule(s_p)
             self.q[s][a] += self.alpha * (r + self.gamma * v_p - self.q[s][a])
         else:
             self.q[s][a] += self.alpha * (r - self.q[s][a])
@@ -124,15 +123,8 @@ def debug_msg(before='', rew=0, a=False, s=''):
         if a: print("   Action taken")
         print("   Reward: ", rew)
         print('_' * 80)
-    while not check_continue_event():
+    while not env.check_continue_event():
         pass
-
-
-def check_continue_event():
-    for event in pygame.event.get():
-        if event.type == KEYDOWN and event.key == K_SPACE:
-            return True
-    return False
 
 
 # MAIN FUNCTION
@@ -173,7 +165,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
         # Take action depending on policy
         old_state = env.get_state()
         action = model.policy(old_state)
-        # debug_msg(before=True, s=old_state)
+        debug_msg(before=True, s=old_state)
 
         action_taken, reward, new_state, alive = env.step(action, mode='AI')
 
@@ -183,9 +175,7 @@ for i in range(len(model.performance['moves']) + 1, len(model.performance['moves
             if env.number['n'] > score:
                 score = env.number['n']
                 number_moves = 0
-            # model.double_q_learning_update(old_state, action, reward, next_state)
             model.update_q(old_state, action, reward, new_state)
-
         if number_moves == 1000 or env.number['n'] > 50:
             break
     # Book-keeping

@@ -114,9 +114,7 @@ def plot_value(value, x, y, file_name='', alpha='', gamma='', r='', it=''):
 def plot_probs(model, x, y, file_name=''):
 
     def e_expected(state, e):
-        print(state.shape)
         p = np.full_like(state, e * (1/len(state)), dtype=float)
-        print(p.shape)
         for i in range(p.shape[0]):
             for j in range(p.shape[1]):
                 for k in range(p.shape[2]):

@@ -118,6 +118,12 @@ class GameSession:
                 return True
         return False
 
+    def check_continue_event(self):
+        for event in pygame.event.get():
+            if event.type == KEYDOWN and event.key == K_SPACE:
+                return True
+        return False
+
     def exit(self):
         self.plot_msg("Press Esc. to quit", self.screen, self.font)
         pygame.display.update()
