@@ -5,7 +5,7 @@ import pickle
 import random
 
 
-class TabTD_n:
+class TabularTDn:
     def __init__(self, grid, alpha=0.4, gamma=0.99, n=1, policy='', update_rule='sarsa'):
         self.q = np.full((grid[0], grid[1], grid[0], grid[1], 4, 5), 0, dtype=float)
         self.alpha = alpha
@@ -79,14 +79,15 @@ class TabTD_n:
 
     def update(self, S, A, R, tau, T):
         G = 0
+        print('testeando')
         for i in range(tau + 1, min(tau + self.n, T) + 1):
             G += self.gamma ** (i - tau - 1) * R[i]
-            print(i,': ', self.gamma**(i-tau-1), '  R: ', R[i])
+            # print(i, ': ', self.gamma**(i-tau-1), '  R: ', R[i])
         if not self.terminal(S[tau + self.n]): #tau + N < T+1:
-            print(tau + self.n, ': ', self.gamma ** self.n)
+            # print(tau + self.n, ': ', self.gamma ** self.n)
             G += self.gamma ** self.n * self.update_rule(S[tau + self.n])
-        print('G: %.2f' % G)
-        print("Inc.: %.2f at state %s, action %i" % (self.alpha * (G - self.q[S[tau]][A[tau]]), S[tau], A[tau]))
+        # print('G: %.2f' % G)
+        # print("Inc.: %.2f at state %s, action %i" % (self.alpha * (G - self.q[S[tau]][A[tau]]), S[tau], A[tau]))
         self.q[S[tau]][A[tau]] += self.alpha * (G - self.q[S[tau]][A[tau]])
 
     def double_q_learning(self, s, a, r, s_p):
@@ -103,22 +104,21 @@ class TabTD_n:
                 self.q2[s][a] += self.alpha * r
 
 
-def debug_msg(before=True, rew=0, a=False, s=''):
-    if before:
-        print('_'*80)
-        print("Before move")
-    else:
-        print("After move")
-    print("   State:  ",  s, env.snake.head.rect.topleft)
-    # print("   On grid: ", env.snake.head.on_grid())
-    if not before:
-        # if a: print("   Action taken")
-        print("   Reward: ", rew)
-        print('_' * 80)
-
-
 # MAIN FUNCTION
 def main():
+    def debug_msg(before=True, rew=0, a=False, s=''):
+        if before:
+            print('_' * 80)
+            print("Before move")
+        else:
+            print("After move")
+        print("   State:  ", s, env.snake.head.rect.topleft)
+        # print("   On grid: ", env.snake.head.on_grid())
+        if not before:
+            # if a: print("   Action taken")
+            print("   Reward: ", rew)
+            print('_' * 80)
+
     screen_size = [400, 400]
     grid_size = [20, 20]
     fix_pos = [12, 10]
@@ -134,13 +134,12 @@ def main():
     batch = 10
     # Maybe load previous model
     if os.path.isfile(file_name) and not restart:
-        model = TabTD_n(grid_size)
+        model = TabularTDn(grid_size)
         model.load(file_name)
     else:
         if not os.path.isdir(file_dir):
             os.mkdir(file_dir)
-        model = TabTD_n(grid_size, alpha=0.4, gamma=0.8, n=4, policy='e-greedy', update_rule='sarsa')
-
+        model = TabularTDn(grid_size, alpha=0.4, gamma=0.8, n=4, policy='e-greedy', update_rule='sarsa')
 
     # Main loop
     for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
@@ -166,8 +165,8 @@ def main():
             if action_taken:
                 level_moves += 1
                 number_moves += 1
-                # debug_msg(before=True, s=old_state)
-                # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
+                debug_msg(before=True, s=old_state)
+                debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
                 S.append(new_state)
                 A.append(action)
                 R.append(reward)
