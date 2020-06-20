@@ -10,19 +10,6 @@ class TestTabularTDn(unittest.TestCase):
         # if currentTest == 'test_2':
         #     self.skipTest('bla')
 
-    def debug_msg(self, before=True, rew=0, a=False, s=''):
-        if before:
-            print('_'*80)
-            print("Before move")
-        else:
-            print("After movee")
-        print("   State:  ",  s, self.env.snake.head.rect.topleft)
-        # print("   On grid: ", env.snake.head.on_grid())
-        if not before:
-            # if a: print("   Action taken")
-            print("   Reward: ", rew)
-            print('_' * 80)
-
     def test_1(self):
         # This test shows that the reward present at state S[3] gets accounted into
         # the value of Q[S[0]][A[0]], as n=3, at timestamp 3 (t = 0, 1, 2, ...)
@@ -45,6 +32,7 @@ class TestTabularTDn(unittest.TestCase):
         # A3 is calculated on policy in sarsa algorithm, choosing
         # the action with highest value that I previously set
         # To eliminate randomness I use an e-greedy policy with e=0
+        # On e=0 sarsa is equal to q-learning
         # The expected result is the value at S[3][A3] discounted by alpha and gamma^3
         S = [(10, 10, 13, 10, 1), (11, 10, 13, 10, 1), (12, 10, 13, 10, 1), (13, 10, 13, 10, 1)]
         A = [0, 0, 0]
@@ -54,15 +42,15 @@ class TestTabularTDn(unittest.TestCase):
         t = 2
         T = 3
         tau = t - self.model.n + 1
-        print('Tau: ', tau)
-        print('Q at S[3]: ', self.model.q[S[3]])
-        print('Q at S[tau]: ', self.model.q[S[tau]])
-        print('testing...')
+        # print('Tau: ', tau)
+        # print('Q at S[3]: ', self.model.q[S[3]])
+        # print('Q at S[tau]: ', self.model.q[S[tau]])
+        # print('testing...')
         if tau >= 0:
             self.model.update_q(S, A, R, tau, T)
-        print('Q at S[tau]: ', self.model.q[S[tau]])
+        # print('Q at S[tau]: ', self.model.q[S[tau]])
         self.assertEqual(self.model.q[S[tau]][A[tau]], self.model.alpha * self.model.gamma ** 3 * self.model.q[S[3]][0])
+
 
 if __name__ == "__main__":
     unittest.main()
-    # test()
