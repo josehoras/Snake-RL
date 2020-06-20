@@ -79,7 +79,6 @@ class TabularTDn:
 
     def update(self, S, A, R, tau, T):
         G = 0
-        print('testeando')
         for i in range(tau + 1, min(tau + self.n, T) + 1):
             G += self.gamma ** (i - tau - 1) * R[i]
             # print(i, ': ', self.gamma**(i-tau-1), '  R: ', R[i])
