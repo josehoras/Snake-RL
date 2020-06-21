@@ -51,6 +51,20 @@ class TestTabularTDn(unittest.TestCase):
         # print('Q at S[tau]: ', self.model.q[S[tau]])
         self.assertEqual(self.model.q[S[tau]][A[tau]], self.model.alpha * self.model.gamma ** 3 * self.model.q[S[3]][0])
 
+    def test_3(self):
+        # Equivalent to test-1, but the reward is at t=2, n= 3
+        # The expected result is the reward discounted by alpha and gamma
+        # At this test all Q = 0. As the value of the next state is not relevent (0)
+        # all algortithms work with this test (sarsa, expected sarsa, q-learning,...)
+        S = [(10, 10, 13, 10, 1), (11, 10, 13, 10, 1), (12, 10, 13, 10, 1), (13, 10, 13, 10, 1)]
+        A = [0, 0, 0]
+        R = [0, 0, 1, 0]
+        t = 2
+        T = 3
+        tau = t - self.model.n + 1
+        if tau >= 0:
+            self.model.update_q(S, A, R, tau, T)
+        self.assertEqual(self.model.q[S[tau]][A[tau]], self.model.alpha * self.model.gamma ** 1 * R[2])
 
 if __name__ == "__main__":
     unittest.main()
