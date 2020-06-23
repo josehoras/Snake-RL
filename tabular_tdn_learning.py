@@ -48,7 +48,7 @@ class TabularTDn:
     def it_plus(self):
         self.it += 1
         self.e = 1 / self.it
-        if self.e < 0.01: self.e = 0
+        # if self.e < 0.01: self.e = 0
         print('E-greedy: %.3f' % self.e)
 
     def e_greedy_policy(self, state):
@@ -120,17 +120,17 @@ def main():
 
     screen_size = [400, 400]
     grid_size = [20, 20]
-    fix_pos = [12, 10]
-    env = GameSession(screen_size, grid_size, fix_number=fix_pos, delay=0, render=True)
+    fix_pos = [0, 0]
+    env = GameSession(screen_size, grid_size, fix_number='', delay=0, render=False)
 
     # Model name
     file_dir = "results/"
     file_base = "sarsa"
-    file_post = "_a04g08e1000n10"
+    file_post = "_a04g08e1000n4_full"
     file_ext = ".td"
     file_name = file_dir + file_base + file_post + file_ext
-    restart = True
-    batch = 10
+    restart = False
+    epoch = 1000
     # Maybe load previous model
     if os.path.isfile(file_name) and not restart:
         model = TabularTDn(grid_size)
@@ -140,10 +140,11 @@ def main():
             os.mkdir(file_dir)
         model = TabularTDn(grid_size, alpha=0.4, gamma=0.8, n=4, policy='e-greedy', update_rule='sarsa')
 
+    model.it = 10
     # Main loop
     for i in range(len(model.performance['moves']) + 1, len(model.performance['moves']) + 200001):
         _, _, alive = env.start_game()
-        if i % batch == 0:
+        if i % epoch == 0:
             model.it_plus()
         level_moves = 0
         number_moves = 0
@@ -164,12 +165,12 @@ def main():
             if action_taken:
                 level_moves += 1
                 number_moves += 1
-                debug_msg(before=True, s=old_state)
-                debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
+                # debug_msg(before=True, s=old_state)
+                # debug_msg(before=False, rew=reward, a=action_taken, s=new_state)
                 S.append(new_state)
                 A.append(action)
                 R.append(reward)
-                print('S: ', S, '\nA: ', A, '\nR: ', R)
+                # print('S: ', S, '\nA: ', A, '\nR: ', R)
                 tau = t - model.n + 1
                 if tau >= 0:
                     model.update_q(S, A, R, tau, T)
@@ -179,8 +180,8 @@ def main():
                 t += 1
                 if alive and env.number['n'] <= 50 and number_moves < 500:
                     T += 1
-                while not env.check_continue_event():
-                    pass
+                # while not env.check_continue_event():
+                #     pass
 
         # Book-keeping
         # print("%06.3f, %06.3f" % (np.min(model.q[:, :, 5, 10]), np.max(model.q[:, :, 5, 10])))
@@ -189,7 +190,7 @@ def main():
               (model.performance['score'][-1], model.performance['smooth_score'][-1],
                model.performance['moves'][-1], model.performance['smooth_moves'][-1]))
         print()
-        if i % 1 == 0:
+        if i % 500 == 0:
             plot_performance(model.performance, file_dir + file_base + file_post)
             # plot_value(model.q, 5, 10, file_name=file_dir + 'v_map' + file_post + '.png',
             #            alpha=alpha, gamma=gamma, r=r, it=i)
